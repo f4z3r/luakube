@@ -7,10 +7,12 @@ API, allowing for full control, but provides some convenience functions for quic
 
 ## Testing
 
+> To install `busted`, run `luarocks install busted`.
+
 Testing is done with `busted`:
 
 ```bash
-busted --exclude-tags=system spec
+busted --exclude-tags=system --lua=$(which lua) spec
 ```
 
 ### System Tests
@@ -20,7 +22,10 @@ The system tests require `k3d` to be installed, and the `docker` service to be r
 To run the system tests:
 
 ```bash
-busted --defer-print -t system spec
+busted --defer-print --lua=$(which lua) -t system spec
 # or combined with unit tests
-busted --defer-print spec
+busted --defer-print --lua=$(which lua) spec
 ```
+
+> The `--lua` flag is required when running shims with several lua installations other than the
+> system installation.

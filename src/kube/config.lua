@@ -149,6 +149,18 @@ function conf.Config:context(ctxt)
   return self._ctxt
 end
 
+
+-- Returns the headers required for authentication from the configuration.
+function conf.Config:headers()
+  if self._token then
+    return {
+      authorization = "Bearer "..self._token
+    }
+  end
+  return nil, "no token is set in current configuration"
+end
+
+
 -- Return a configuration loaded from the kube config at path and set to context ctxt.
 function conf.from_kube_config(path, ctxt)
   local kube_config = KubeConfig:new(path)
