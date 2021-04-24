@@ -1,5 +1,5 @@
 package = "luakube"
-version = "0.1.0"
+version = "0.1.0-0"
 
 source = {
 	-- url = "http://luaforge.net/frs/download.php/3637/luajson-0.10.tar.bz2",
