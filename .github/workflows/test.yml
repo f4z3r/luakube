@@ -30,4 +30,4 @@ jobs:
         luarocks install busted
     - name: test
       run: |
-        busted spec
+        busted --exclude-tags=system,local spec
