@@ -30,7 +30,7 @@ dependencies = {
 }
 
 build = {
-	type = "module",
+	type = "builtin",
 	modules = {
 		kube = "src/kube.lua",
 		["kube.config"] = "src/kube/config.lua",

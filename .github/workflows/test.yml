@@ -25,9 +25,17 @@ jobs:
       with:
         luaVersion: ${{ matrix.luaVersion }}
     - uses: leafo/gh-actions-luarocks@v4
-    - name: setup
+    - name: install libyaml
+      run: sudo apt-get install libyaml-dev
+    - name: install lua dependencies
       run: |
+        luarocks install lyaml
+        luarocks install luajson
+        luarocks install luasocket
+        luarocks install luasec
+        luarocks install base64
+        luarocks install fun
         luarocks install busted
-    - name: test
+    - name: run unit tests
       run: |
         busted --exclude-tags=system,local spec
