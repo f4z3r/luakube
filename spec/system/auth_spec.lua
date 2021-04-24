@@ -8,7 +8,7 @@ Description:
 
 local utils = require "spec.utils"
 local config = require "kube.config"
-local api_client = require "kube.api_client"
+local api = require "kube.api"
 
 describe("Authentication #system", function()
   io.write("starting system test:\n")
@@ -42,9 +42,12 @@ describe("Authentication #system", function()
     end)
 
     describe("and with a API client", function()
+      local client = api.Client:new(conf)
 
-      it("should pass this test", function()
-        assert.is_true(true)
+      it("should be able to get the node list", function()
+        local nodes = client:call("GET", "v1/nodes")
+        assert.are.equal("NodeList", nodes.kind)
+        assert.are.equal(1, #nodes.items)
       end)
     end)
   end)
