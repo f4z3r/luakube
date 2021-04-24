@@ -28,7 +28,7 @@ local function initialize_sa(user)
   worked = worked and os.execute("kubectl apply -f assets/sa.yaml")
   worked = worked and os.execute("kubectl apply -f assets/crb.yaml")
   local secret = run('kubectl -n demo get sa/admin -o jsonpath="{.secrets[0].name}"')
-  local token = run(string.format('kubectl -n demo get secret/%s -o json | jq -r ".data.token" | base64 -d', secret))
+  local token = run(string.format('kubectl -n demo get secret %s -o json | jq -r ".data.token" | base64 -d', secret))
   worked = worked and os.execute(string.format("kubectl config set-credentials %s --token=%s", user, token))
   return worked
 end
