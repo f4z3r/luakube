@@ -9,7 +9,7 @@ source = {
 description = {
 	summary = "Kubernetes API library for Lua",
 	detailed = [[
-	  LuaKube is a simple client library to access the Kubernetes
+		LuaKube is a simple client library to access the Kubernetes
 		API. It does not abstract much from the API, allowing for full
 		control, but provides some convenience functions for quick
 		scripting.
