@@ -8,26 +8,31 @@ source = {
 
 description = {
 	summary = "Kubernetes API library for Lua",
-	-- detailed = [[
-	--   LuaJSON is a customizable JSON decoder/encoder using
-	--   LPEG for parsing.
-	-- ]],
+	detailed = [[
+	  LuaKube is a simple client library to access the Kubernetes
+		API. It does not abstract much from the API, allowing for full
+		control, but provides some convenience functions for quick
+		scripting.
+	]],
 	homepage = "https://github.com/jakobbeckmann/luakube",
 	maintainer = "Jakob Beckmann <beckmann_jakob@hotmail.fr>",
 	license = "MIT"
 }
 
 dependencies = {
-	"lua >= 5.3",
+	"lua == 5.3",
 	"lyaml >= 6.2",
 	"luajson >= 1.3",
+	"luasocket >= 3.0",
+	"luasec >= 1.0",
+	"base64 >= 1.5",
+	"fun >= 0.1",
 }
 
 build = {
 	type = "module",
 	modules = {
 		kube = "src/kube.lua",
-		-- ["json.util"] = "src/json/util.lua",
-		-- ["json.encode.strings"] = "src/json/encode/strings.lua"
+		["kube.config"] = "src/kube/config.lua",
 	}
 }

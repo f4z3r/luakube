@@ -9,5 +9,11 @@ Lua abstraction of Kubernetes API.
 Testing is done with `busted`:
 
 ```bash
-busted spec
+busted --exclude-tags=system spec
+```
+
+To run the system tests:
+
+```bash
+busted --defer-print -t system spec
 ```
