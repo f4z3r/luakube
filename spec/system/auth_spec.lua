@@ -11,6 +11,7 @@ local config = require "kube.config"
 local api_client = require "kube.api_client"
 
 describe("Authentication #system", function()
+  io.write("starting system test:\n")
   local tear
   local name
   setup(function()
@@ -24,11 +25,27 @@ describe("Authentication #system", function()
     end
   end)
 
-  describe("with kube config", function()
-    local configuration = config.from_kube_config()
+  describe("with kube a local config", function()
+    local conf
+    before_each(function() conf = config.from_kube_config() end)
 
-    it("return the correct context", function()
-      assert.are.same("k3d-"..name , configuration:context())
+    it("should return the correct context", function()
+      assert.are.same("k3d-"..name , conf:context())
+    end)
+
+    it("should return the correct username", function()
+      assert.are.same("admin@k3d-"..name , conf:username())
+    end)
+
+    it("should return the correct cluster", function()
+      assert.are.same("k3d-"..name , conf:cluster())
+    end)
+
+    describe("and with a API client", function()
+
+      it("should pass this test", function()
+        assert.is_true(true)
+      end)
     end)
   end)
 end)
