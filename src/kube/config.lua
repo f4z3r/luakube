@@ -99,27 +99,27 @@ end
 
 -- Returns the list of available contexts in the configuration.
 function conf.Config:contexts()
-  return self._kube:context_names()
+  return self.kube_:context_names()
 end
 
 -- Returns the currently active cluster in the configuration.
 function conf.Config:cluster()
-  return assert(self._kube:cluster_name(self._ctxt))
+  return assert(self.kube_:cluster_name(self.ctxt_))
 end
 
 -- Returns the list of available clusters in the configuration.
 function conf.Config:clusters()
-  return self._kube:cluster_names()
+  return self.kube_:cluster_names()
 end
 
 -- Returns the list of available contexts in the configuration.
 function conf.Config:usernames()
-  return self._kube:usernames()
+  return self.kube_:usernames()
 end
 
 -- Returns the user for the current context in the configuration.
 function conf.Config:username()
-  return assert(self._kube:username(self._ctxt))
+  return assert(self.kube_:username(self.ctxt_))
 end
 
 -- Returns the server address currently configured
@@ -128,8 +128,8 @@ function conf.Config:server_addr()
 end
 
 local function init_config(config)
-  local user = config._kube:user(config:username())
-  local cluster = config._kube:cluster(config:cluster())
+  local user = config.kube_:user(config:username())
+  local cluster = config.kube_:cluster(config:cluster())
   config._addr = cluster.server
   if user.token then
     config._token = user.token
@@ -143,10 +143,10 @@ end
 -- context.
 function conf.Config:context(ctxt)
   if ctxt then
-    self._ctxt = ctxt
+    self.ctxt_ = ctxt
     assert(init_config(self))
   end
-  return self._ctxt
+  return self.ctxt_
 end
 
 
@@ -166,8 +166,8 @@ function conf.from_kube_config(path, ctxt)
   local kube_config = KubeConfig:new(path)
   ctxt = ctxt or kube_config["current-context"]
   local config =  conf.Config:new{
-    _kube = kube_config,
-    _ctxt = ctxt,
+    kube_ = kube_config,
+    ctxt_ = ctxt,
   }
   assert(init_config(config))
   return config
