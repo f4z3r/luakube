@@ -4,6 +4,8 @@ local ltn12 = require "ltn12"
 local https = require "ssl.https"
 local json = require "json"
 
+local core_v1 = require "kube.api.core_v1"
+
 local api = {}
 
 api.Client = {}
@@ -47,9 +49,14 @@ end
 function api.Client:call(method, path, body)
   local resp, err_msg, code = self:raw_call(method, path, body)
   if not resp then
-    return resp, err_msg, code
+    error("Code "..code..": "..(err_msg or "unknown error"))
   end
   return json.decode(resp)
+end
+
+-- Get a Core V1 API client
+function api.Client:corev1()
+  return core_v1.Client:new(self)
 end
 
 return api
