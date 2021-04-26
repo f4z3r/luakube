@@ -33,11 +33,17 @@ local function initialize_sa(user)
   return worked
 end
 
+function utils.initialize_deployments()
+  local worked = os.execute("kubectl -n demo apply -f assets/deploy.yaml")
+  worked = worked and os.execute("kubectl -n demo apply -f assets/svc.yaml")
+  return worked
+end
+
 function utils.create_k3d_cluster()
   local logfile = os.tmpname()
   local time = os.date("%H%M%S", os.time())
   local name = "luakube-"..time
-  os.execute(string.format("k3d cluster create %s > %s 2>&1", name, logfile))
+  os.execute(string.format("k3d cluster create %s -a 2 -s 1 > %s 2>&1", name, logfile))
   if not os.execute("kubectl cluster-info >> "..logfile) == 0 then
     error("failed to create k3d cluster for testing: "..logfile)
   end
