@@ -96,7 +96,6 @@ function conf.Config:new(o)
   return o
 end
 
-
 -- Returns the list of available contexts in the configuration.
 function conf.Config:contexts()
   return self.kube_:context_names()
@@ -124,15 +123,15 @@ end
 
 -- Returns the server address currently configured
 function conf.Config:server_addr()
-  return self._addr
+  return self.addr_
 end
 
 local function init_config(config)
   local user = config.kube_:user(config:username())
   local cluster = config.kube_:cluster(config:cluster())
-  config._addr = cluster.server
+  config.addr_ = cluster.server
   if user.token then
-    config._token = user.token
+    config.token_ = user.token
   else
     return nil, "only token logins are currently supported"
   end
@@ -149,28 +148,47 @@ function conf.Config:context(ctxt)
   return self.ctxt_
 end
 
-
 -- Returns the headers required for authentication from the configuration.
 function conf.Config:headers()
-  if self._token then
+  if self.token_ then
     return {
-      authorization = "Bearer "..self._token
+      authorization = "Bearer "..self.token_
     }
   end
   return nil, "no token is set in current configuration"
 end
 
-
 -- Return a configuration loaded from the kube config at path and set to context ctxt.
 function conf.from_kube_config(path, ctxt)
   local kube_config = KubeConfig:new(path)
   ctxt = ctxt or kube_config["current-context"]
-  local config =  conf.Config:new{
+  local config = conf.Config:new{
     kube_ = kube_config,
     ctxt_ = ctxt,
   }
   assert(init_config(config))
   return config
+end
+
+-- Use the service account mounted in the pod as a configuration to connect.
+-- TODO(@jakob): test this function
+function conf.in_cluster_config()
+  local sa_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  local fh = io.open(sa_path, "r")
+  local token = fh:read("a")
+  fh:close()
+  return conf.Config:new{
+    token_ = token,
+  }
+end
+
+-- Use a static bearer token to create a configuration to connect to the cluster. This can be either
+-- a static cluster token, or a bootstrap token.
+-- TODO(@jakob): test this function
+function conf.from_token(token)
+  return conf.Config:new{
+    token_ = token,
+  }
 end
 
 return conf
