@@ -42,8 +42,8 @@ library, including what is supported and what not.
 - [ ] System Tests (covering entire implemented API)
 - [ ] Authentication
   - [x] Service Account Token
-  - [ ] Bootstrap Token
-  - [ ] Static Token
+  - [x] Bootstrap Token
+  - [x] Static Token
   - [ ] X509 Certificate
   - [ ] OIDC
   - [ ] Proxy

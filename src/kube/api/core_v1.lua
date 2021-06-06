@@ -35,7 +35,7 @@ core_v1.Client.podlist = utils.create_get_list_ns(pods)
 core_v1.Client.pods = utils.create_get_all_ns(pods)
 core_v1.Client.pod = utils.create_get_single_ns(pods)
 core_v1.Client.pod_status = utils.create_get_single_status_ns(pods)
-core_v1.Client.pod_logs = function(self, ns, name, args)
+core_v1.Client.logs = function(self, ns, name, args)
   local path = string.format("namespaces/%s/%s/%s/log", ns, pods, name)
   return self:raw_call("GET", path, nil, args)
 end
