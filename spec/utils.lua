@@ -43,7 +43,7 @@ function utils.create_k3d_cluster()
   local logfile = os.tmpname()
   local time = os.date("%H%M%S", os.time())
   local name = "luakube-"..time
-  os.execute(string.format("k3d cluster create %s -a 2 -s 1 > %s 2>&1", name, logfile))
+  os.execute(string.format("k3d cluster create %s -a 2 -s 1 --image=rancher/k3s:v1.21.1-k3s1 > %s 2>&1", name, logfile))
   if not os.execute("kubectl cluster-info >> "..logfile) == 0 then
     error("failed to create k3d cluster for testing: "..logfile)
   end
@@ -51,6 +51,11 @@ function utils.create_k3d_cluster()
   assert(initialize_sa(username))
   return name, function () delete_k3d_cluster(name, logfile) end
 end
+
+function utils.sleep(secs)
+  os.execute("sleep "..secs)
+end
+
 
 return utils
 
