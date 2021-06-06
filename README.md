@@ -39,6 +39,7 @@ library, including what is supported and what not.
 
 ### Progress
 
+- [x] Accept both strings and tables for objects
 - [ ] System Tests (covering entire implemented API)
 - [ ] Authentication
   - [x] Service Account Token
@@ -53,7 +54,8 @@ library, including what is supported and what not.
     - [x] Get Status
     - [ ] Update
     - [ ] Patch
-    - [ ] Create
+    - [x] Create
+    - [x] Delete
     - [x] Logs
     - [ ] Exec
   - [ ] Namespaces
@@ -61,11 +63,13 @@ library, including what is supported and what not.
     - [x] Get Status
     - [ ] Update
     - [ ] Patch
-    - [ ] Create
+    - [x] Create
+    - [x] Delete
   - [ ] Nodes
     - [x] Get
     - [x] Get Status
     - [ ] Update
     - [ ] Patch
-    - [ ] Create
+    - [x] Create
+    - [x] Delete
 - [ ] ...
