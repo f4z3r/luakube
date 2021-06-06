@@ -21,6 +21,8 @@ The system tests require `k3d` to be installed, and the `docker` service to be r
 
 To run the system tests:
 
+> Careful, these test take a decent time to complete, as they create several testing clusters.
+
 ```bash
 busted --defer-print --lua=$(which lua) -t system spec
 # or combined with unit tests
@@ -29,3 +31,41 @@ busted --defer-print --lua=$(which lua) spec
 
 > The `--lua` flag is required when running shims with several lua installations other than the
 > system installation.
+
+## Development
+
+This is used to track the progress of the development. It should show the current state of the
+library, including what is supported and what not.
+
+### Progress
+
+- [ ] System Tests (covering entire implemented API)
+- [ ] Authentication
+  - [x] Service Account Token
+  - [ ] Bootstrap Token
+  - [ ] Static Token
+  - [ ] X509 Certificate
+  - [ ] OIDC
+  - [ ] Proxy
+- [ ] CoreV1
+  - [ ] Pods
+    - [x] Get
+    - [x] Get Status
+    - [ ] Update
+    - [ ] Patch
+    - [ ] Create
+    - [x] Logs
+    - [ ] Exec
+  - [ ] Namespaces
+    - [x] Get
+    - [x] Get Status
+    - [ ] Update
+    - [ ] Patch
+    - [ ] Create
+  - [ ] Nodes
+    - [x] Get
+    - [x] Get Status
+    - [ ] Update
+    - [ ] Patch
+    - [ ] Create
+- [ ] ...

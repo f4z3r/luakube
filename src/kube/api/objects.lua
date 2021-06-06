@@ -6,6 +6,8 @@ Description:
   Collection of objects returned from API calls.
 ]]--
 
+local fun = require "fun"
+
 local objects = {}
 
 objects.APIObject = {}
@@ -40,7 +42,19 @@ end
 objects.NamespacedAPIObject = objects.APIObject:new({})
 
 function objects.NamespacedAPIObject:namespace()
-  return self.metdata.namespace
+  return self.metadata.namespace
+end
+
+function objects.list_to_api_object(list)
+  return fun.iter(list["items"])
+    :map(function(item) return objects.APIObject:new(item) end)
+    :totable()
+end
+
+function objects.list_to_ns_api_object(list)
+  return fun.iter(list["items"])
+    :map(function(item) return objects.NamespacedAPIObject:new(item) end)
+    :totable()
 end
 
 return objects
