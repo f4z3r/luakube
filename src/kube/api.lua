@@ -60,9 +60,14 @@ function api.Client:raw_call(method, path, body, query)
     local query_str = build_query(query)
     url = url .. '?' .. query_str
   end
+  local headers = self.conf_:headers()
   local source
+  local body_str = ""
   if body then
-    source = ltn12.source.string(body)
+    body_str = json.encode(body)
+    source = ltn12.source.string(body_str)
+    headers["Content-Type"] = "application/json";
+    headers["Content-Length"] = #body_str;
   end
   local resp = {}
   local params = {
@@ -72,11 +77,11 @@ function api.Client:raw_call(method, path, body, query)
     protocol = "any",
     source = source,
     sink = ltn12.sink.table(resp),
-    headers = self.conf_:headers(),
+    headers = headers,
   }
   local worked, code, _ = https.request(params)
   if not worked or code < 200 or code >= 300 then
-    return nil, "failed to perform API call", code
+    return nil, string.format("failed to perform API call: %s %s\n%s", method, url, body_str), code
   end
   return table.concat(resp)
 end
