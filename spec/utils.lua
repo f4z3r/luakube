@@ -6,15 +6,43 @@ Description:
  Testing utilities.
 ]]--
 
+local assert = require("luassert")
+local say = require("say")
 
+-- Custom assertions
+local function starting_with(state, arguments)
+  if not type(arguments[1]) == "string" or #arguments ~= 2 then
+    return false
+  end
+
+  local sub = string.sub(arguments[1], 0, #arguments[2])
+  return sub == arguments[2]
+end
+
+say:set("assertion.starting_with.positive", "Expected %s \nto start with: %s")
+say:set("assertion.starting_with.negative", "Expected %s \nto not to start with: %s")
+assert:register("assertion", "starting_with", starting_with,
+                "assertion.starting_with.positive", "assertion.starting_with.negative")
+
+local function containing(state, arguments)
+  if not type(arguments[1]) == "string" or #arguments ~= 2 then
+    return false
+  end
+  return string.match(arguments[1], arguments[2]) ~= nil
+end
+
+say:set("assertion.containing.positive", "Expected %s \nto contain: %s")
+say:set("assertion.containing.negative", "Expected %s \nto not to contain: %s")
+assert:register("assertion", "containing", containing,
+                "assertion.containing.positive", "assertion.containing.negative")
+
+-- Utility functions
 local function run(cmd)
   local fh = io.popen(cmd, "r")
   local ctnt = fh:read("a")
   fh:close()
   return ctnt
 end
-
-local utils = {}
 
 local function delete_k3d_cluster(name, logfile)
   if not os.execute(string.format("k3d cluster delete %s >> %s 2>&1", name, logfile)) == 0 then
@@ -33,6 +61,11 @@ local function initialize_sa(user)
   return worked
 end
 
+local utils = {}
+
+-- Kubernetes version against which the system tests are run
+utils.KUBE_VERSION = "1.21.1"
+
 function utils.initialize_deployments()
   local worked = os.execute("kubectl -n demo apply -f assets/deploy.yaml")
   worked = worked and os.execute("kubectl -n demo apply -f assets/svc.yaml")
@@ -43,7 +76,8 @@ function utils.create_k3d_cluster()
   local logfile = os.tmpname()
   local time = os.date("%H%M%S", os.time())
   local name = "luakube-"..time
-  os.execute(string.format("k3d cluster create %s -a 2 -s 1 --image=rancher/k3s:v1.21.1-k3s1 > %s 2>&1", name, logfile))
+  os.execute(string.format("k3d cluster create %s -a 2 -s 1 --image=rancher/k3s:v%s-k3s1 > %s 2>&1",
+                           name, utils.KUBE_VERSION, logfile))
   if not os.execute("kubectl cluster-info >> "..logfile) == 0 then
     error("failed to create k3d cluster for testing: "..logfile)
   end
