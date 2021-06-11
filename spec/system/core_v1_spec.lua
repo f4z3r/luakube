@@ -36,6 +36,12 @@ describe("Core V1 #system", function()
     end)
 
     describe("inspecting namespaces", function()
+      it("should not be a namespaced client", function()
+        assert.has.errors(function()
+          client:namespaces("demo")
+        end)
+      end)
+
       it("should be able to return all", function()
         local namespaces = client:namespaces():get()
         assert.are.equal(5, #namespaces)
@@ -58,6 +64,18 @@ describe("Core V1 #system", function()
         assert.are.equal("v1", nslist.apiVersion)
       end)
 
+      it("should be able to update one", function()
+        local ns_client = client:namespaces()
+        local ns = ns_client:get("demo")
+        local labels = ns:labels()
+        assert.is_nil(labels["new-label"])
+        labels["new-label"] = "hello-world"
+        ns_client:update(ns)
+        utils.sleep(1)
+        local updated_ns = ns_client:get("demo")
+        assert.are.equal("hello-world", updated_ns:labels()["new-label"])
+      end)
+
       it("should be able to create/delete one", function()
         local namespace = {
           metadata = {
@@ -68,13 +86,20 @@ describe("Core V1 #system", function()
           }
         }
         local ns_client = client:namespaces()
-        local resp = ns_client:create(namespace)
-        assert.are.equal("test", resp:name())
-        local _ = ns_client:delete(resp:name())
+        local ret = ns_client:create(namespace)
+        assert.are.equal("test", ret:name())
+        local resp = ns_client:delete(ret:name())
+        assert.are.equal("Terminating", resp.status.phase)
       end)
     end)
 
     describe("inspecting nodes", function()
+      it("should not be a namespaced client", function()
+        assert.has.errors(function()
+          client:nodes("demo")
+        end)
+      end)
+
       it("should be able to return all", function()
         local nodes = client:nodes():get()
         assert.are.equal(3, #nodes)
@@ -98,6 +123,18 @@ describe("Core V1 #system", function()
         local nodelist = client:nodes():list()
         assert.are.equal("NodeList", nodelist.kind)
         assert.are.equal("v1", nodelist.apiVersion)
+      end)
+
+      it("should be able to update one", function()
+        local node_client = client:nodes()
+        local node = node_client:get({labelSelector = "node-role.kubernetes.io/master=true"})[1]
+        local labels = node:labels()
+        assert.is_nil(labels["new-label"])
+        labels["new-label"] = "hello-world"
+        node_client:update(node)
+        utils.sleep(1)
+        local updated_node = node_client:get(node:name())
+        assert.are.equal("hello-world", updated_node:labels()["new-label"])
       end)
     end)
 
@@ -135,6 +172,18 @@ describe("Core V1 #system", function()
         local pod = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
         local logs = client:logs(pod:namespace(), pod:name(), {tailLines = 25})
         assert.is.containing(logs, "plugin/reload: Running configuration MD5")
+      end)
+
+      it("should be able to update one", function()
+        local pod_client = client:pods("kube-system")
+        local pod = pod_client:get({labelSelector = "k8s-app=kube-dns"})[1]
+        local labels = pod:labels()
+        assert.is_nil(labels["new-label"])
+        labels["new-label"] = "hello-world"
+        pod_client:update(pod)
+        utils.sleep(1)
+        local updated_pod = pod_client:get(pod:name())
+        assert.are.equal("hello-world", updated_pod:labels()["new-label"])
       end)
 
       it("should be able to delete one", function()
@@ -187,6 +236,18 @@ spec:
         assert.are.equal(3, #svcs)
       end)
 
+      it("should be able to update one", function()
+        local svc_client = client:services("kube-system")
+        local svc = svc_client:get("kube-dns")
+        local labels = svc:labels()
+        assert.is_nil(labels["new-label"])
+        labels["new-label"] = "hello-world"
+        svc_client:update(svc)
+        utils.sleep(1)
+        local updated_svc = svc_client:get(svc:name())
+        assert.are.equal("hello-world", updated_svc:labels()["new-label"])
+      end)
+
       it("should be able to create and delete one", function()
         local svc_obj = {
           metadata = {
@@ -204,10 +265,12 @@ spec:
             }
           }
         }
-        local _ = client:services():create(svc_obj)
+        local ret = client:services():create(svc_obj)
+        assert.are.equal(svc_obj.metadata.name, ret:name())
         local svc = client:services(svc_obj.metadata.namespace):get(svc_obj.metadata.name)
         assert.are.equal(svc_obj.spec.type, svc.spec.type)
-        local _ = client:services(svc_obj.metadata.namespace):delete(svc_obj.metadata.name)
+        local status = client:services(svc_obj.metadata.namespace):delete(svc_obj.metadata.name)
+        assert.are.equal("Success", status.status)
       end)
     end)
 
@@ -224,6 +287,7 @@ spec:
 
       it("should not have a status", function()
         assert.is_nil(client:configmaps("kube-system").status)
+        assert.is_nil(client:configmaps("kube-system").update_status)
       end)
 
       it("should be able to return all in list", function()
@@ -235,6 +299,17 @@ spec:
       it("should be able to return all in the kube-system namespace", function()
         local cms = client:configmaps("kube-system"):get()
         assert.are.equal(9, #cms)
+      end)
+
+      it("should be able to update one", function()
+        local cm_client = client:configmaps("kube-system")
+        local cm = cm_client:get("coredns")
+        assert.is_nil(cm.data.random)
+        cm.data.random = "some random data"
+        cm_client:update(cm)
+        utils.sleep(1)
+        local updated_cm = cm_client:get(cm:name())
+        assert.are.equal("some random data", updated_cm.data.random)
       end)
 
       it("should be able to create and delete one", function()
@@ -252,7 +327,8 @@ spec:
         local cm = client:configmaps(cm_obj.metadata.namespace):get(cm_obj.metadata.name)
         assert.are.equal(cm_obj.metadata.name, cm:name())
         assert.are.equal(cm_obj.data.url, cm.data.url)
-        local _ = client:configmaps(cm_obj.metadata.namespace):delete(cm_obj.metadata.name)
+        local status = client:configmaps(cm_obj.metadata.namespace):delete(cm_obj.metadata.name)
+        assert.are.equal("Success", status.status)
       end)
     end)
 
@@ -270,6 +346,7 @@ spec:
 
       it("should not have a status", function()
         assert.is_nil(client:secrets("kube-system").status)
+        assert.is_nil(client:secrets("kube-system").update_status)
       end)
 
       it("should be able to return all in list", function()
@@ -283,7 +360,7 @@ spec:
         assert.are.equal(42, #secs)
       end)
 
-      it("should be able to create and delete one", function()
+      it("should be able to create, update, and delete one", function()
         local sec_obj = {
           metadata = {
             name = "demo-sec-test",
@@ -297,7 +374,14 @@ spec:
         local _ = client:secrets():create(sec_obj)
         local sec = client:secrets(sec_obj.metadata.namespace):get(sec_obj.metadata.name)
         assert.are.equal(sec_obj.type, sec.type)
-        local _ = client:secrets(sec_obj.metadata.namespace):delete(sec_obj.metadata.name)
+        assert.are.equal(sec_obj.data.password, sec.data.password)
+        sec.data.password = "c3VwZXJzZWNyZXQ="
+        client:secrets():update(sec)
+        utils.sleep(1)
+        local updated_sec = client:secrets(sec:namespace()):get(sec:name())
+        assert.are.equal("c3VwZXJzZWNyZXQ=", updated_sec.data.password)
+        local status = client:secrets(sec_obj.metadata.namespace):delete(sec_obj.metadata.name)
+        assert.are.equal("Success", status.status)
       end)
     end)
   end)
