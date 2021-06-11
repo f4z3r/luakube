@@ -50,6 +50,18 @@ local service_base = {
 }
 core_v1.Client.services = utils.generate_object_client("services", service_base, true)
 
+local configmap_base = {
+  apiVersion = "v1",
+  kind = "ConfigMap",
+}
+core_v1.Client.configmaps = utils.generate_object_client("configmaps", configmap_base, true, false)
+
+local secret_base = {
+  apiVersion = "v1",
+  kind = "Secret",
+}
+core_v1.Client.secrets = utils.generate_object_client("secrets", secret_base, true, false)
+
 return core_v1
 
 

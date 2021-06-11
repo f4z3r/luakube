@@ -52,7 +52,9 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
     if ns then
       assert(namespaced, "cannot provide namespace on non-namespaced object type")
     end
-    with_status = with_status or true
+    if with_status == nil then
+      with_status = true
+    end
 
     local client = {}
     parent.__index = parent
