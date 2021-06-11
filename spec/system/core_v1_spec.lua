@@ -37,23 +37,23 @@ describe("Core V1 #system", function()
 
     describe("inspecting namespaces", function()
       it("should be able to return all", function()
-        local namespaces = client:namespaces()
+        local namespaces = client:namespaces():get()
         assert.are.equal(5, #namespaces)
       end)
 
       it("should be able to return a specific one", function()
-        local ns = client:namespace("demo")
+        local ns = client:namespaces():get("demo")
         assert.are.equal("demo", ns:name())
         assert.are.same({}, ns:annotations())
       end)
 
       it("should be able to return the status of a specific one", function()
-        local status = client:namespace_status("demo")
+        local status = client:namespaces():status("demo")
         assert.are.equal("Active", status.phase)
       end)
 
       it("should be able to return all in list", function()
-        local nslist = client:namespacelist()
+        local nslist = client:namespaces():list()
         assert.are.equal("NamespaceList", nslist.kind)
         assert.are.equal("v1", nslist.apiVersion)
       end)
@@ -67,32 +67,34 @@ describe("Core V1 #system", function()
             },
           }
         }
-        local resp = client:create_namespace(namespace)
+        local ns_client = client:namespaces()
+        local resp = ns_client:create(namespace)
         assert.are.equal("test", resp:name())
-        local status = client:delete_namespace(resp:name())
+        local _ = ns_client:delete(resp:name())
       end)
     end)
 
     describe("inspecting nodes", function()
       it("should be able to return all", function()
-        local nodes = client:nodes()
+        local nodes = client:nodes():get()
         assert.are.equal(3, #nodes)
       end)
 
-      it("should be able to return a specific one", function()
-        local ns = client:namespace("demo")
-        assert.are.equal("demo", ns:name())
-        assert.are.same({}, ns:annotations())
-      end)
+      -- it("should be able to return a specific one", function()
+      --   local ns = client:namespaces():get("demo")
+      --   assert.are.equal("demo", ns:name())
+      --   assert.are.same({}, ns:annotations())
+      -- end)
 
       it("should be able to return the status of a specific one", function()
-        local node = client:nodes({labelSelector = "node-role.kubernetes.io/master=true"})[1]
-        local status = client:node_status(node:name())
+        local node_client = client:nodes()
+        local node = node_client:get({labelSelector = "node-role.kubernetes.io/master=true"})[1]
+        local status = node_client:status(node:name())
         assert.are.equal("amd64", status.nodeInfo.architecture)
       end)
 
       it("should be able to return all in list", function()
-        local nodelist = client:nodelist()
+        local nodelist = client:nodes():list()
         assert.are.equal("NodeList", nodelist.kind)
         assert.are.equal("v1", nodelist.apiVersion)
       end)
@@ -100,43 +102,43 @@ describe("Core V1 #system", function()
 
     describe("inspecting pods", function()
       it("should be able to return all", function()
-        local pods = client:pods()
+        local pods = client:pods():get()
         assert.are.equal(12, #pods)
       end)
 
       it("should be able to return a specific one", function()
-        local pod_base = client:pods({labelSelector = "k8s-app=kube-dns"})[1]
-        local pod = client:pod(pod_base:namespace(), pod_base:name())
+        local pod_base = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
+        local pod = client:pods(pod_base:namespace()):get(pod_base:name())
         assert.is.starting_with(pod:name(), "coredns")
         assert.are.equal("kube-dns", pod_base:labels()["k8s-app"])
       end)
 
       it("should be able to return the status of a specific one", function()
-        local pod = client:pods({labelSelector = "k8s-app=kube-dns"})[1]
-        local status = client:pod_status(pod:namespace(), pod:name())
+        local pod = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
+        local status = client:pods(pod:namespace()):status(pod:name())
         assert.are.equal("Running", status.phase)
       end)
 
       it("should be able to return all in list", function()
-        local podlist = client:podlist()
+        local podlist = client:pods():list()
         assert.are.equal("PodList", podlist.kind)
         assert.are.equal("v1", podlist.apiVersion)
       end)
 
       it("should be able to return all in the kube-system namespace", function()
-        local pods = client:pods("kube-system")
+        local pods = client:pods("kube-system"):get()
         assert.are.equal(9, #pods)
       end)
 
       it("should be able to get logs of a pod", function()
-        local pod = client:pods({labelSelector = "k8s-app=kube-dns"})[1]
+        local pod = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
         local logs = client:logs(pod:namespace(), pod:name(), {tailLines = 25})
         assert.is.containing(logs, "plugin/reload: Running configuration MD5")
       end)
 
       it("should be able to delete one", function()
-        local pod = client:pods({labelSelector = "k8s-app=kube-dns"})[1]
-        local _ = client:delete_pod(pod:namespace(), pod:name())
+        local pod = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
+        local _ = client:pods(pod:namespace()):delete(pod:name())
       end)
 
       it("should be able to create one", function()
@@ -151,7 +153,7 @@ spec:
     image: nginx:1.14.2
     ports:
     - containerPort: 80]]
-        local resp = client:create_pod("demo", pod_yaml)
+        local resp = client:pods("demo"):create(pod_yaml)
         assert.is.equal("Pending", resp.status.phase)
       end)
     end)
