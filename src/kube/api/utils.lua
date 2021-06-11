@@ -13,145 +13,115 @@ local objects = require "kube.api.objects"
 
 local utils = {}
 
-function utils.generate_client(api)
-  return function(self, o)
-    assert(o, "API clients need to be created with a superclient")
+function utils.generate_base(api)
+  return function(parent, api_client)
+    assert(api_client, 'API abstraction must be created from a client')
     local client = {}
-    self.__index = self
-    setmetatable(client, self)
-    client.client_ = o
+    parent.__index = parent
+    setmetatable(client, parent)
+    client.client_ = api_client
     client.api_ = api
+    client.call = function(self, method, path, body, query)
+      return self.client_:call(method, self.api_..path, body, query)
+    end
+    client.raw_call = function(self, method, path, body, query)
+      return self.client_:raw_call(method, self.api_..path, body, query)
+    end
     return client
   end
 end
 
-function utils.generate_call()
-  return function(self, method, path, body, query)
-    return self.client_:call(method, self.api_..path, body, query)
+local function converter(namespaced)
+  local res = objects.APIObject
+  if namespaced then
+    res = objects.NamespacedAPIObject
   end
+  return res
 end
 
-function utils.generate_raw_call()
-  return function(self, method, path, body, query)
-    return self.client_:raw_call(method, self.api_..path, body, query)
+local function list_converter(namespaced)
+  local res = objects.list_to_api_object
+  if namespaced then
+    res = objects.list_to_ns_api_object
   end
+  return res
 end
 
-function utils.generate_get_single(obj_type)
-  return function(self, name)
-    local path = string.format("%s/%s", obj_type, name)
-    local obj = self:call("GET", path)
-    return objects.APIObject:new(obj)
-  end
-end
-
-function utils.generate_get_single_status(obj_type)
-  return function(self, name)
-    local path = string.format("%s/%s/status", obj_type, name)
-    local obj = self:call("GET", path)
-    return obj.status
-  end
-end
-
-function utils.generate_create(obj_type, concat)
-  return function(self, obj, query)
-    if type(obj) == "string" then
-      obj = yaml.load(obj)
+function utils.generate_object_client(api, concat, namespaced)
+  return function(parent, ns)
+    if ns then
+      assert(namespaced, "cannot provide namespace on non-namespaced object type")
     end
-    for key, val in pairs(concat) do
-      obj[key] = val
+
+    local client = {}
+    parent.__index = parent
+    setmetatable(client, parent)
+    client.client_ = parent.client_
+    client.api_ = api
+    client.base_api_ = parent.api_
+    client.namespaced_ = ns and true or false
+    if ns then
+      client.path_ = string.format("%s/namespaces/%s/%s", client.base_api_, ns, client.api_)
+    else
+      client.path_ = string.format("%s/%s", client.base_api_, client.api_)
     end
-    local resp = self:call("POST", obj_type, obj, query)
-    return objects.APIObject:new(resp)
-  end
-end
 
-function utils.generate_delete(obj_type)
-  return function(self, name, query)
-    local path = string.format("%s/%s", obj_type, name)
-    return self:call("DELETE", path, nil, query)
-  end
-end
-
-function utils.generate_get_all(obj_type)
-  return function(self, query)
-    local path = string.format("%s", obj_type)
-    local objs = self:call("GET", path, nil, query)
-    return objects.list_to_api_object(objs)
-  end
-end
-
-function utils.generate_get_list(obj_type)
-  return function(self, query)
-    local list = self:call("GET", obj_type, nil, query)
-    for idx, item in ipairs(list.items) do
-      list.items[idx] = objects.APIObject:new(item)
+    function client.call(self, method, path, body, query)
+      return self.client_:call(method, self.path_..path, body, query)
     end
-    return list
-  end
-end
 
-function utils.generate_get_single_ns(obj_type)
-  return function(self, ns, name)
-    local path = string.format("namespaces/%s/%s/%s", ns, obj_type, name)
-    local obj = self:call("GET", path)
-    return objects.NamespacedAPIObject:new(obj)
-  end
-end
-
-function utils.generate_get_single_status_ns(obj_type)
-  return function(self, ns, name)
-    local path = string.format("namespaces/%s/%s/%s/status", ns, obj_type, name)
-    local obj = self:call("GET", path)
-    return obj.status
-  end
-end
-
-function utils.generate_create_ns(obj_type, concat)
-  return function(self, ns, obj, query)
-    if type(obj) == "string" then
-      obj = yaml.load(obj)
+    function client.raw_call(self, method, path, body, query)
+      return self.client_:raw_call(method, self.path_..path, body, query)
     end
-    for key, val in pairs(concat) do
-      obj[key] = val
-    end
-    local path = string.format("namespaces/%s/%s", ns, obj_type)
-    local resp = self:call("POST", path, obj, query)
-    return objects.NamespacedAPIObject:new(resp)
-  end
-end
 
-function utils.generate_delete_ns(obj_type)
-  return function(self, ns, name, query)
-    local path = string.format("namespaces/%s/%s/%s", ns, obj_type, name)
-    return self:call("DELETE", path, nil, query)
-  end
-end
+    function client.get(self, name, query)
+      if not name or type(name) ~= "string" then
+        query = query or name
+        local objs = self:call("GET", "", nil, query)
+        return list_converter(self)(objs)
+      end
+      assert(not namespaced or self.namespaced_, "can only get object by name when providing namespace")
+      local obj = self:call("GET", "/"..name, nil, query)
+      return converter(namespaced):new(obj)
+    end
 
-function utils.generate_get_all_ns(obj_type)
-  return function(self, ns, query)
-    local path = string.format("namespaces/%s/%s", ns, obj_type)
-    if type(ns) ~= "string" then
-      path = obj_type
-      query = ns
+    function client.status(self, name)
+      assert(not namespaced or self.namespaced_, "can only get object status when providing namespace")
+      local path = string.format("/%s/status",  name)
+      local obj = self:call("GET", path)
+      return obj.status
     end
-    local objs = self:call("GET", path, nil, query)
-    return objects.list_to_ns_api_object(objs)
-  end
-end
 
-function utils.generate_get_list_ns(obj_type)
-  return function(self, ns, query)
-    local path = string.format("namespaces/%s/%s", ns, obj_type)
-    if type(ns) ~= "string" then
-      path = obj_type
-      query = ns
+    function client.create(self, obj, query)
+      if type(obj) == "string" then
+        obj = yaml.load(obj)
+      end
+      for key, val in pairs(concat) do
+        obj[key] = val
+      end
+      local path = ""
+      local resp = nil
+      if namespaced and not self.namespaced_ then
+        path = string.format("/namespaces/%s/%s", obj.metadata.namespace, self.api_)
+        resp = self.client_:call("POST", self.base_api_..path, obj, query)
+      end
+      resp = self:call("POST", path, obj, query)
+      return converter(namespaced):new(resp)
     end
-    local list = self:call("GET", path, nil, query)
-    for idx, item in ipairs(list.items) do
-      list.items[idx] = objects.NamespacedAPIObject:new(item)
+
+    function client.delete(self, name, query)
+      return self:call("DELETE", "/"..name, nil, query)
     end
-    return list
+
+    function client.list(self, query)
+      local list = self:call("GET", "", nil, query)
+      for idx, item in ipairs(list.items) do
+        list.items[idx] = converter(namespaced):new(item)
+      end
+      return list
+    end
+
+    return client
   end
 end
 
