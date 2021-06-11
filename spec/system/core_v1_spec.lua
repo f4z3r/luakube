@@ -210,5 +210,95 @@ spec:
         local _ = client:services(svc_obj.metadata.namespace):delete(svc_obj.metadata.name)
       end)
     end)
+
+    describe("inspecting configmaps", function()
+      it("should be able to return all", function()
+        local cms = client:configmaps():get()
+        assert.are.equal(14, #cms)
+      end)
+
+      it("should be able to return a specific one", function()
+        local cm = client:configmaps("kube-system"):get("coredns")
+        assert.is_not_nil(cm.data.Corefile)
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:configmaps("kube-system").status)
+      end)
+
+      it("should be able to return all in list", function()
+        local cmlist = client:configmaps():list()
+        assert.are.equal("ConfigMapList", cmlist.kind)
+        assert.are.equal("v1", cmlist.apiVersion)
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local cms = client:configmaps("kube-system"):get()
+        assert.are.equal(9, #cms)
+      end)
+
+      it("should be able to create and delete one", function()
+        local cm_obj = {
+          metadata = {
+            name = "demo-cm-test",
+            namespace = "demo",
+          },
+          data = {
+            url = "hello.world",
+            username = "whoami",
+          }
+        }
+        local _ = client:configmaps():create(cm_obj)
+        local cm = client:configmaps(cm_obj.metadata.namespace):get(cm_obj.metadata.name)
+        assert.are.equal(cm_obj.metadata.name, cm:name())
+        assert.are.equal(cm_obj.data.url, cm.data.url)
+        local _ = client:configmaps(cm_obj.metadata.namespace):delete(cm_obj.metadata.name)
+      end)
+    end)
+
+    describe("inspecting secrets", function()
+      it("should be able to return all", function()
+        local secrets = client:secrets():get()
+        assert.are.equal(47, #secrets)
+      end)
+
+      it("should be able to return a specific one", function()
+        local sec = client:secrets("kube-system"):get("k3s-serving")
+        assert.is_not_nil(sec.data["tls.key"])
+        assert.are.equal("kubernetes.io/tls", sec.type)
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:secrets("kube-system").status)
+      end)
+
+      it("should be able to return all in list", function()
+        local seclist = client:secrets():list()
+        assert.are.equal("SecretList", seclist.kind)
+        assert.are.equal("v1", seclist.apiVersion)
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local secs = client:secrets("kube-system"):get()
+        assert.are.equal(42, #secs)
+      end)
+
+      it("should be able to create and delete one", function()
+        local sec_obj = {
+          metadata = {
+            name = "demo-sec-test",
+            namespace = "demo",
+          },
+          type = "Opaque",
+          data = {
+            password = "c2VjcmV0"
+          }
+        }
+        local _ = client:secrets():create(sec_obj)
+        local sec = client:secrets(sec_obj.metadata.namespace):get(sec_obj.metadata.name)
+        assert.are.equal(sec_obj.type, sec.type)
+        local _ = client:secrets(sec_obj.metadata.namespace):delete(sec_obj.metadata.name)
+      end)
+    end)
   end)
 end)

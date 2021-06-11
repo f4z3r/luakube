@@ -57,6 +57,7 @@ library, including what is supported and what not.
     - [x] Create
     - [x] Delete
     - [x] Logs
+    - [ ] EphemeralContainers
     - [ ] Exec
   - [ ] Namespaces
     - [x] Get
@@ -80,6 +81,18 @@ library, including what is supported and what not.
     - [x] Create
     - [x] Delete
   - [ ] PodTemplates
+    - [x] Get
+    - [ ] Update
+    - [ ] Patch
+    - [x] Create
+    - [x] Delete
+  - [ ] ConfigMap
+    - [x] Get
+    - [ ] Update
+    - [ ] Patch
+    - [x] Create
+    - [x] Delete
+  - [ ] Secret
     - [x] Get
     - [ ] Update
     - [ ] Patch
