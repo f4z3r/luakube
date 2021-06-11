@@ -47,31 +47,31 @@ local function list_converter(namespaced)
   return res
 end
 
-function utils.generate_object_client(api, concat, namespaced)
+function utils.generate_object_client(api, concat, namespaced, with_status)
   return function(parent, ns)
     if ns then
       assert(namespaced, "cannot provide namespace on non-namespaced object type")
     end
+    with_status = with_status or true
 
     local client = {}
     parent.__index = parent
     setmetatable(client, parent)
     client.client_ = parent.client_
     client.api_ = api
-    client.base_api_ = parent.api_
     client.namespaced_ = ns and true or false
     if ns then
-      client.path_ = string.format("%s/namespaces/%s/%s", client.base_api_, ns, client.api_)
+      client.path_ = string.format("/namespaces/%s/%s", ns, client.api_)
     else
-      client.path_ = string.format("%s/%s", client.base_api_, client.api_)
+      client.path_ = "/"..client.api_
     end
 
     function client.call(self, method, path, body, query)
-      return self.client_:call(method, self.path_..path, body, query)
+      return parent:call(method, self.path_..path, body, query)
     end
 
     function client.raw_call(self, method, path, body, query)
-      return self.client_:raw_call(method, self.path_..path, body, query)
+      return parent:raw_call(method, self.path_..path, body, query)
     end
 
     function client.get(self, name, query)
@@ -85,11 +85,13 @@ function utils.generate_object_client(api, concat, namespaced)
       return converter(namespaced):new(obj)
     end
 
-    function client.status(self, name)
-      assert(not namespaced or self.namespaced_, "can only get object status when providing namespace")
-      local path = string.format("/%s/status",  name)
-      local obj = self:call("GET", path)
-      return obj.status
+    if with_status then
+      function client.status(self, name)
+        assert(not namespaced or self.namespaced_, "can only get object status when providing namespace")
+        local path = string.format("/%s/status",  name)
+        local obj = self:call("GET", path)
+        return obj.status
+      end
     end
 
     function client.create(self, obj, query)
@@ -103,9 +105,10 @@ function utils.generate_object_client(api, concat, namespaced)
       local resp = nil
       if namespaced and not self.namespaced_ then
         path = string.format("/namespaces/%s/%s", obj.metadata.namespace, self.api_)
-        resp = self.client_:call("POST", self.base_api_..path, obj, query)
+        resp = parent:call("POST", path, obj, query)
+      else
+        resp = self:call("POST", path, obj, query)
       end
-      resp = self:call("POST", path, obj, query)
       return converter(namespaced):new(resp)
     end
 

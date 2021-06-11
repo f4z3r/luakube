@@ -72,4 +72,17 @@ library, including what is supported and what not.
     - [ ] Patch
     - [x] Create
     - [x] Delete
+  - [ ] Services
+    - [x] Get
+    - [x] Get Status
+    - [ ] Update
+    - [ ] Patch
+    - [x] Create
+    - [x] Delete
+  - [ ] PodTemplates
+    - [x] Get
+    - [ ] Update
+    - [ ] Patch
+    - [x] Create
+    - [x] Delete
 - [ ] ...
