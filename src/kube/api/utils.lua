@@ -114,6 +114,46 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
       return converter(namespaced):new(resp)
     end
 
+    function client.update(self, obj, query)
+      if type(obj) == "string" then
+        obj = yaml.load(obj)
+      end
+      for key, val in pairs(concat) do
+        obj[key] = val
+      end
+      local path = "/"..obj.metadata.name
+      local resp = nil
+      if namespaced and not self.namespaced_ then
+        path = string.format("/namespaces/%s/%s/%s", obj.metadata.namespace,
+                             self.api_, obj.metadata.name)
+        resp = parent:call("PUT", path, obj, query)
+      else
+        resp = self:call("PUT", path, obj, query)
+      end
+      return converter(namespaced):new(resp)
+    end
+
+    if with_status then
+      function client.update_status(self, obj, query)
+        if type(obj) == "string" then
+          obj = yaml.load(obj)
+        end
+        for key, val in pairs(concat) do
+          obj[key] = val
+        end
+        local path = string.format("/%s/status", obj.metadata.name)
+        local resp = nil
+        if namespaced and not self.namespaced_ then
+          path = string.format("/namespaces/%s/%s/%s/status", obj.metadata.namespace,
+                               self.api_, obj.metadata.name)
+          resp = parent:call("PUT", path, obj, query)
+        else
+          resp = self:call("PUT", path, obj, query)
+        end
+        return converter(namespaced):new(resp)
+      end
+    end
+
     function client.delete(self, name, query)
       return self:call("DELETE", "/"..name, nil, query)
     end

@@ -52,49 +52,55 @@ library, including what is supported and what not.
   - [ ] Pods
     - [x] Get
     - [x] Get Status
-    - [ ] Update
+    - [x] Update
+    - [x] Update Status
     - [ ] Patch
     - [x] Create
     - [x] Delete
+    - [ ] Delete Collection
     - [x] Logs
     - [ ] EphemeralContainers
     - [ ] Exec
   - [ ] Namespaces
     - [x] Get
     - [x] Get Status
-    - [ ] Update
+    - [x] Update Status
+    - [x] Update
+    - [ ] Update Finalizer
     - [ ] Patch
     - [x] Create
     - [x] Delete
   - [ ] Nodes
     - [x] Get
     - [x] Get Status
-    - [ ] Update
+    - [x] Update Status
+    - [x] Update
     - [ ] Patch
     - [x] Create
     - [x] Delete
   - [ ] Services
     - [x] Get
     - [x] Get Status
-    - [ ] Update
+    - [x] Update
+    - [x] Update Status
     - [ ] Patch
     - [x] Create
     - [x] Delete
   - [ ] PodTemplates
     - [x] Get
-    - [ ] Update
+    - [x] Update
     - [ ] Patch
     - [x] Create
     - [x] Delete
   - [ ] ConfigMap
     - [x] Get
-    - [ ] Update
+    - [x] Update
     - [ ] Patch
     - [x] Create
     - [x] Delete
   - [ ] Secret
     - [x] Get
-    - [ ] Update
+    - [x] Update
     - [ ] Patch
     - [x] Create
     - [x] Delete
