@@ -158,5 +158,57 @@ spec:
         assert.is.equal("Pending", resp.status.phase)
       end)
     end)
+
+    describe("inspecting services", function()
+      it("should be able to return all", function()
+        local services = client:services():get()
+        assert.are.equal(5, #services)
+      end)
+
+      it("should be able to return a specific one", function()
+        local svc = client:services("kube-system"):get("kube-dns")
+        assert.are.equal("kube-dns", svc:labels()["k8s-app"])
+        assert.are.equal("ClusterIP", svc.spec.type)
+      end)
+
+      it("should be able to return the status of a specific one", function()
+        local status = client:services("kube-system"):status("kube-dns")
+        assert.are.same({}, status.loadBalancer)
+      end)
+
+      it("should be able to return all in list", function()
+        local svclist = client:services():list()
+        assert.are.equal("ServiceList", svclist.kind)
+        assert.are.equal("v1", svclist.apiVersion)
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local svcs = client:services("kube-system"):get()
+        assert.are.equal(3, #svcs)
+      end)
+
+      it("should be able to create and delete one", function()
+        local svc_obj = {
+          metadata = {
+            name = "demo-svc-test",
+            namespace = "demo",
+          },
+          spec = {
+            type = "ClusterIP",
+            ports = {
+              {
+                port = 443,
+                name = "https",
+                protocol = "TCP",
+              },
+            }
+          }
+        }
+        local _ = client:services():create(svc_obj)
+        local svc = client:services(svc_obj.metadata.namespace):get(svc_obj.metadata.name)
+        assert.are.equal(svc_obj.spec.type, svc.spec.type)
+        local _ = client:services(svc_obj.metadata.namespace):delete(svc_obj.metadata.name)
+      end)
+    end)
   end)
 end)
