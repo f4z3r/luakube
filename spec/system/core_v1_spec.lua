@@ -80,11 +80,12 @@ describe("Core V1 #system", function()
         assert.are.equal(3, #nodes)
       end)
 
-      -- it("should be able to return a specific one", function()
-      --   local ns = client:namespaces():get("demo")
-      --   assert.are.equal("demo", ns:name())
-      --   assert.are.same({}, ns:annotations())
-      -- end)
+      it("should be able to return a specific one", function()
+        local node_client = client:nodes()
+        local node_base = node_client:get({labelSelector = "node-role.kubernetes.io/master=true"})[1]
+        local node = node_client:get(node_base:name())
+        assert.are.equal(node_base:name(), node:name())
+      end)
 
       it("should be able to return the status of a specific one", function()
         local node_client = client:nodes()
