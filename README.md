@@ -40,6 +40,7 @@ library, including what is supported and what not.
 ### Progress
 
 - [x] Accept both strings and tables for objects
+- [ ] Define examples and run them as tests with `#example` tag.
 - [ ] System Tests (covering entire implemented API)
 - [ ] Authentication
   - [x] Service Account Token
