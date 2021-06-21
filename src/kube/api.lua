@@ -1,3 +1,8 @@
+--[[
+Author: Jakob Beckmann <beckmann_jakob@hotmail.fr>
+Description:
+ API base module that is used to obtain a general client.
+]]--
 
 
 local ltn12 = require "ltn12"
@@ -5,6 +10,15 @@ local https = require "ssl.https"
 local json = require "json"
 
 local core_v1 = require "kube.api.core_v1"
+
+-- Mock client used to fake https requests. Always returns empty response and never fails.
+local mock_https = {
+  request = function(params)
+    local source = ltn12.source.string('{"items": []}')
+    ltn12.pump.all(source, params.sink)
+    return true, 200, ""
+  end,
+}
 
 -- TODO(@jakob): cleanup query encoding functions
 local function encode(str)
@@ -48,7 +62,7 @@ function api.Client:new(config, mock)
   local o = {
     conf_ = config,
     url_ = config:server_addr(),
-    mock_ = mock
+    https_ = mock and mock_https or https
   }
   self.__index = self
   setmetatable(o, self)
@@ -87,10 +101,7 @@ function api.Client:raw_call(method, path, body, query)
     headers = headers,
     body = body
   }
-  if self.mock_ then
-    return '{"items": []}', info
-  end
-  local worked, code, _ = https.request(params)
+  local worked, code, _ = self.https_.request(params)
   if not worked or code < 200 or code >= 300 then
     return nil, string.format("failed to perform API call: %s %s\n%s", method, url, body_str), code
   end
