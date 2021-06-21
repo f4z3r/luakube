@@ -70,6 +70,31 @@ describe("Core V1 ", function()
         assert.are.same(expected, info.body)
       end)
 
+      it("should be able to update the status of one", function()
+        local ns = {
+          metadata = {
+            name = "demo",
+          },
+          status = {
+            phase = "Pending",
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Namespace",
+          metadata = {
+            name = "demo"
+          },
+          status = {
+            phase = "Pending",
+          }
+        }
+        local _, info = client:namespaces():update_status(ns)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/status")
+        assert.are.same(expected, info.body)
+      end)
+
       it("should be able to create one", function()
         local namespace = {
           metadata = {
@@ -157,6 +182,17 @@ describe("Core V1 ", function()
         assert.is.ending_with(info.url, "/api/v1/nodes/demo")
         assert.are.same(expected, info.body)
       end)
+
+      it("should be able to update the status of one", function()
+        local node = {
+          metadata = {
+            name = "demo"
+          }
+        }
+        local _, info = client:nodes():update_status(node)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo/status")
+      end)
     end)
 
     describe("inspecting pods", function()
@@ -231,6 +267,26 @@ describe("Core V1 ", function()
         assert.are.equal("PUT", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/demo")
         assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to update the status of one", function()
+        local pod = {
+          metadata = {
+            name = "demo",
+            namespace = "kube-system"
+          },
+          spec = {
+            containers = {
+              {
+                name = "demo",
+                image = "busybox",
+              },
+            }
+          }
+        }
+        local _, info = client:pods("kube-system"):update_status(pod)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/demo/status")
       end)
 
       it("should be able to delete one", function()
@@ -351,6 +407,28 @@ spec:
         assert.are.equal("PUT", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo/services/demo-svc-test")
         assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to update the status of one", function()
+        local svc_obj = {
+          metadata = {
+            name = "demo-svc-test",
+            namespace = "demo",
+          },
+          spec = {
+            type = "ClusterIP",
+            ports = {
+              {
+                port = 443,
+                name = "https",
+                protocol = "TCP",
+              },
+            }
+          }
+        }
+        local _, info = client:services("demo"):update_status(svc_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/services/demo-svc-test/status")
       end)
 
       it("should be able to create one", function()
