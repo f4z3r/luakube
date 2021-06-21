@@ -8,6 +8,7 @@ Description:
 
 local assert = require("luassert")
 local say = require("say")
+local json = require("json")
 
 -- Custom assertions
 local function starting_with(state, arguments)
@@ -24,6 +25,22 @@ say:set("assertion.starting_with.negative", "Expected %s \nto not to start with:
 assert:register("assertion", "starting_with", starting_with,
                 "assertion.starting_with.positive", "assertion.starting_with.negative")
 
+local function ending_with(state, arguments)
+  if not type(arguments[1]) == "string" or #arguments ~= 2 then
+    return false
+  end
+
+  local start = #arguments[1] - #arguments[2] + 1
+  local sub = string.sub(arguments[1], start, #arguments[1])
+  return sub == arguments[2]
+end
+
+say:set("assertion.ending_with.positive", "Expected %s \nto end with: %s")
+say:set("assertion.ending_with.negative", "Expected %s \nto not to end with: %s")
+assert:register("assertion", "ending_with", ending_with,
+                "assertion.ending_with.positive", "assertion.ending_with.negative")
+
+
 local function containing(state, arguments)
   if not type(arguments[1]) == "string" or #arguments ~= 2 then
     return false
@@ -35,6 +52,7 @@ say:set("assertion.containing.positive", "Expected %s \nto contain: %s")
 say:set("assertion.containing.negative", "Expected %s \nto not to contain: %s")
 assert:register("assertion", "containing", containing,
                 "assertion.containing.positive", "assertion.containing.negative")
+
 
 -- Utility functions
 local function run(cmd)
@@ -90,6 +108,11 @@ function utils.sleep(secs)
   os.execute("sleep "..secs)
 end
 
+function utils.assert_are_json_equal(arg1, arg2)
+  arg1 = json.decode(arg1)
+  arg2 = json.decode(arg2)
+  assert.are.same(arg1, arg2)
+end
 
 return utils
 
