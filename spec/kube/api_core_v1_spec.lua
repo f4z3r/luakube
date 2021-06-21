@@ -16,7 +16,7 @@ describe("Core V1 ", function()
     before_each(function()
       local path = "assets/config"
       local conf = config.from_kube_config(path)
-      local global_client = api.Client:new(conf, true)
+      local global_client = api.Client:new(conf, false, true)
       client = global_client:corev1()
     end)
 
@@ -93,6 +93,33 @@ describe("Core V1 ", function()
         assert.are.equal("PUT", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo/status")
         assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to patch one", function()
+        local patch = {
+          metadata = {
+            labels = {
+              key1 = "value1",
+              key2 = "value2",
+            }
+          }
+        }
+        local _, info = client:namespaces():patch("demo", patch)
+        assert.are.equal("PATCH", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo")
+        assert.are.same(patch, info.body)
+      end)
+
+      it("should be able to patch the status of one", function()
+        local patch = {
+          status = {
+            phase = "Active",
+          }
+        }
+        local _, info = client:namespaces():patch("demo", patch)
+        assert.are.equal("PATCH", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo")
+        assert.are.same(patch, info.body)
       end)
 
       it("should be able to create one", function()
@@ -192,6 +219,22 @@ describe("Core V1 ", function()
         local _, info = client:nodes():update_status(node)
         assert.are.equal("PUT", info.method)
         assert.is.ending_with(info.url, "/api/v1/nodes/demo/status")
+      end)
+
+      it("should be able to patch one", function()
+        local patch = {
+          metadata = {
+            labels = {
+              key1 = "value1",
+              key2 = "value2",
+            }
+          }
+        }
+        local _, info = client:nodes():patch("demo", patch)
+        assert.are.equal("PATCH", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo")
+        assert.are.same(patch, info.body)
+        assert.are.equal("application/merge-patch+json", info.headers["Content-Type"])
       end)
     end)
 
