@@ -10,9 +10,25 @@ local fun = require "fun"
 
 local objects = {}
 
-objects.APIObject = {}
+objects.Response = {}
+
+function objects.Response:new(o)
+  o = o or {}
+  self.__index = self
+  setmetatable(o, self)
+  return o
+end
+
+function objects.Response:is_failure()
+  return self.kind == "Status" and self.status == "Failure"
+end
+
+objects.APIObject = objects.Response:new({})
 
 function objects.APIObject:new(o)
+  if o and o.is_failure and o:is_failure() then
+    return o
+  end
   o = o or {}
   self.__index = self
   setmetatable(o, self)

@@ -21,11 +21,11 @@ function utils.generate_base(api)
     setmetatable(client, parent)
     client.client_ = api_client
     client.api_ = api
-    client.call = function(self, method, path, body, query)
-      return self.client_:call(method, self.api_..path, body, query)
+    client.call = function(self, method, path, body, query, style)
+      return self.client_:call(method, self.api_..path, body, query, style)
     end
-    client.raw_call = function(self, method, path, body, query)
-      return self.client_:raw_call(method, self.api_..path, body, query)
+    client.raw_call = function(self, method, path, body, query, style)
+      return self.client_:raw_call(method, self.api_..path, body, query, style)
     end
     return client
   end
@@ -68,31 +68,31 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
       client.path_ = "/"..client.api_
     end
 
-    function client.call(self, method, path, body, query)
-      return parent:call(method, self.path_..path, body, query)
+    function client.call(self, method, path, body, query, style)
+      return parent:call(method, self.path_..path, body, query, style)
     end
 
-    function client.raw_call(self, method, path, body, query)
-      return parent:raw_call(method, self.path_..path, body, query)
+    function client.raw_call(self, method, path, body, query, style)
+      return parent:raw_call(method, self.path_..path, body, query, style)
     end
 
     function client.get(self, name, query)
       if not name or type(name) ~= "string" then
         query = query or name
-        local objs, info = self:call("GET", "", nil, query)
-        return list_converter(self)(objs), info
+        local objs, info, code = self:call("GET", "", nil, query)
+        return list_converter(self)(objs), info, code
       end
       assert(not namespaced or self.namespaced_, "can only get object by name when providing namespace")
-      local obj, info = self:call("GET", "/"..name, nil, query)
-      return converter(namespaced):new(obj), info
+      local obj, info, code = self:call("GET", "/"..name, nil, query)
+      return converter(namespaced):new(obj), info, code
     end
 
     if with_status then
       function client.status(self, name)
         assert(not namespaced or self.namespaced_, "can only get object status when providing namespace")
         local path = string.format("/%s/status",  name)
-        local obj, info = self:call("GET", path)
-        return obj.status, info
+        local obj, info, code = self:call("GET", path)
+        return obj.status, info, code
       end
     end
 
@@ -104,15 +104,13 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
         obj[key] = val
       end
       local path = ""
-      local info = nil
-      local resp = nil
+      local receiver = self
       if namespaced and not self.namespaced_ then
         path = string.format("/namespaces/%s/%s", obj.metadata.namespace, self.api_)
-        resp, info = parent:call("POST", path, obj, query)
-      else
-        resp, info = self:call("POST", path, obj, query)
+        receiver = parent
       end
-      return converter(namespaced):new(resp), info
+      local resp, info, code = receiver:call("POST", path, obj, query)
+      return converter(namespaced):new(resp), info, code
     end
 
     function client.update(self, obj, query)
@@ -123,16 +121,14 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
         obj[key] = val
       end
       local path = "/"..obj.metadata.name
-      local info = nil
-      local resp = nil
+      local receiver = self
       if namespaced and not self.namespaced_ then
         path = string.format("/namespaces/%s/%s/%s", obj.metadata.namespace,
                              self.api_, obj.metadata.name)
-        resp, info = parent:call("PUT", path, obj, query)
-      else
-        resp, info = self:call("PUT", path, obj, query)
+        receiver = parent
       end
-      return converter(namespaced):new(resp), info
+      local resp, info, code = receiver:call("PUT", path, obj, query)
+      return converter(namespaced):new(resp), info, code
     end
 
     if with_status then
@@ -144,16 +140,30 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
           obj[key] = val
         end
         local path = string.format("/%s/status", obj.metadata.name)
-        local info = nil
-        local resp = nil
+        local receiver = self
         if namespaced and not self.namespaced_ then
           path = string.format("/namespaces/%s/%s/%s/status", obj.metadata.namespace,
                                self.api_, obj.metadata.name)
-          resp, info = parent:call("PUT", path, obj, query)
-        else
-          resp, info = self:call("PUT", path, obj, query)
+          receiver = parent
         end
-        return converter(namespaced):new(resp), info
+        local resp, info, code = receiver:call("PUT", path, obj, query)
+        return converter(namespaced):new(resp), info, code
+      end
+    end
+
+    function client.patch(self, name, patch, query, style)
+      local path = "/"..name
+      assert(not namespaced or self.namespaced_, "can only patch object by name when providing namespace")
+      local resp, info, code = self:call("PATCH", path, patch, query, style)
+      return converter(namespaced):new(resp), info, code
+    end
+
+    if with_status then
+      function client.patch_status(self, name, patch, query, style)
+        local path = string.format("/%s/status", name)
+        assert(not namespaced or self.namespaced_, "can only patch object status by name when providing namespace")
+        local resp, info, code = self:call("PATCH", path, patch, query, style)
+        return converter(namespaced):new(resp), info, code
       end
     end
 
@@ -162,11 +172,11 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
     end
 
     function client.list(self, query)
-      local list, info = self:call("GET", "", nil, query)
+      local list, info, code = self:call("GET", "", nil, query)
       for idx, item in ipairs(list.items) do
         list.items[idx] = converter(namespaced):new(item)
       end
-      return list, info
+      return list, info, code
     end
 
     return client

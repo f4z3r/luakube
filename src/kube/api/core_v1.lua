@@ -6,30 +6,30 @@ Description:
   Core V1 API specification.
 ]]--
 
-local fun = require "fun"
-local obj = require "kube.api.objects"
 local utils = require "kube.api.utils"
 
 local core_v1 = {}
 
 core_v1.Client = {}
 
-core_v1.Client.new = utils.generate_base("v1")
+core_v1.version_string = "v1"
+
+core_v1.Client.new = utils.generate_base(core_v1.version_string)
 
 local node_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "Node",
 }
 core_v1.Client.nodes = utils.generate_object_client("nodes", node_base, false)
 
 local ns_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "Namespace",
 }
 core_v1.Client.namespaces = utils.generate_object_client("namespaces", ns_base, false)
 
 local pod_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "Pod",
 }
 core_v1.Client.pods = utils.generate_object_client("pods", pod_base, true)
@@ -39,25 +39,25 @@ core_v1.Client.logs = function(self, ns, name, args)
 end
 
 local podtemplate_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "PodTemplate",
 }
 core_v1.Client.podtemplates = utils.generate_object_client("podtemplates", podtemplate_base, true, false)
 
 local service_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "Service",
 }
 core_v1.Client.services = utils.generate_object_client("services", service_base, true)
 
 local configmap_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "ConfigMap",
 }
 core_v1.Client.configmaps = utils.generate_object_client("configmaps", configmap_base, true, false)
 
 local secret_base = {
-  apiVersion = "v1",
+  apiVersion = core_v1.version_string,
   kind = "Secret",
 }
 core_v1.Client.secrets = utils.generate_object_client("secrets", secret_base, true, false)
