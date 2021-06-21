@@ -70,10 +70,92 @@ describe("Core V1 ", function()
         assert.are.same(expected, info.body)
       end)
 
-      it("should be able to create/delete one", function()
+      it("should be able to create one", function()
+        local namespace = {
+          metadata = {
+            name = "test",
+            labels = {
+              test = "jbe",
+            },
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Namespace",
+          metadata = {
+            name = "test",
+            labels = {
+              test = "jbe",
+            },
+          }
+        }
+        local _, info = client:namespaces():create(namespace)
+        assert.are.equal("POST", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to delete one", function()
         local _, info = client:namespaces():delete("demo")
         assert.are.equal("DELETE", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo")
+      end)
+    end)
+
+    describe("inspecting nodes", function()
+      it("should not be a namespaced client", function()
+        assert.has.errors(function()
+          client:nodes("demo")
+        end)
+      end)
+
+      it("should be able to return all", function()
+        local _, info = client:nodes():get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes")
+      end)
+
+      it("should be able to return one based on labels", function()
+        local _, info = client:nodes():get({labelSelector = "node-role.kubernetes.io/master=true"})
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes?labelSelector=node-role.kubernetes.io%2Fmaster%3Dtrue")
+      end)
+
+      it("should be able to return a specific one", function()
+        local _, info = client:nodes():get("demo")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo")
+      end)
+
+      it("should be able to return the status of a specific one", function()
+        local _, info = client:nodes():status("demo")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo/status")
+      end)
+
+      it("should be able to return all in list", function()
+        local _, info = client:nodes():list()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes")
+      end)
+
+      it("should be able to update one", function()
+        local node = {
+          metadata = {
+            name = "demo"
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Node",
+          metadata = {
+            name = "demo"
+          }
+        }
+        local _, info = client:nodes():update(node)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo")
+        assert.are.same(expected, info.body)
       end)
     end)
   end)
