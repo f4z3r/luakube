@@ -54,7 +54,7 @@ library, including what is supported and what not.
     - [x] Get Status
     - [x] Update
     - [x] Update Status
-    - [ ] Patch
+    - [x] Patch
     - [x] Create
     - [x] Delete
     - [ ] Delete Collection
@@ -67,41 +67,23 @@ library, including what is supported and what not.
     - [x] Update Status
     - [x] Update
     - [ ] Update Finalizer
-    - [ ] Patch
+    - [x] Patch
     - [x] Create
     - [x] Delete
-  - [ ] Nodes
+  - [x] Nodes
+  - [x] Services
+  - [x] PodTemplates
+  - [x] ConfigMap
+  - [x] Secret
+- [ ] BatchV1
+  - [ ] Jobs
     - [x] Get
     - [x] Get Status
     - [x] Update Status
     - [x] Update
-    - [ ] Patch
+    - [x] Patch
     - [x] Create
     - [x] Delete
-  - [ ] Services
-    - [x] Get
-    - [x] Get Status
-    - [x] Update
-    - [x] Update Status
-    - [ ] Patch
-    - [x] Create
-    - [x] Delete
-  - [ ] PodTemplates
-    - [x] Get
-    - [x] Update
-    - [ ] Patch
-    - [x] Create
-    - [x] Delete
-  - [ ] ConfigMap
-    - [x] Get
-    - [x] Update
-    - [ ] Patch
-    - [x] Create
-    - [x] Delete
-  - [ ] Secret
-    - [x] Get
-    - [x] Update
-    - [ ] Patch
-    - [x] Create
-    - [x] Delete
-- [ ] ...
+    - [ ] Delete Collection
+    - [ ] Watch Streams
+  - [ ] CronJobs

@@ -20,7 +20,7 @@ describe("Authentication #system", function()
   end)
   teardown(function()
     if tear then
-      io.write("deleting test cluster for auth system testing...\n")
+      io.write(string.format("deleting test cluster '%s' for auth system testing...\n", name))
       tear()
     end
   end)

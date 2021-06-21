@@ -19,10 +19,18 @@ describe("Core V1 #system", function()
     name, tear = utils.create_k3d_cluster()
     utils.initialize_deployments()
     utils.sleep(30)
+    local conf = config.from_kube_config()
+    local client = api.Client:new(conf):batchv1()
+    local status = client:jobs("kube-system"):status("helm-install-traefik")
+    while not status.succeeded or status.succeeded < 1 do
+      io.write("waiting for traffic helm install to complete ...\n")
+      utils.sleep(5)
+      status = client:jobs("kube-system"):status("helm-install-traefik")
+    end
   end)
   teardown(function()
     if tear then
-      io.write("deleting test cluster for core v1 system testing...\n")
+      io.write(string.format("deleting test cluster '%s' for core v1 system testing...\n", name))
       tear()
     end
   end)
@@ -58,6 +66,16 @@ describe("Core V1 #system", function()
         assert.are.equal("Active", status.phase)
       end)
 
+      it("should be able to patch the status of one", function()
+        local patch = {
+          status = {
+            phase = "Active",
+          }
+        }
+        local ns = client:namespaces():patch_status("demo", patch)
+        assert.are.equal("Active", ns.status.phase)
+      end)
+
       it("should be able to return all in list", function()
         local nslist = client:namespaces():list()
         assert.are.equal("NamespaceList", nslist.kind)
@@ -74,6 +92,25 @@ describe("Core V1 #system", function()
         utils.sleep(1)
         local updated_ns = ns_client:get("demo")
         assert.are.equal("hello-world", updated_ns:labels()["new-label"])
+      end)
+
+      it("should be able to patch one", function()
+        local patch = {
+          metadata = {
+            labels = {
+              key1 = "value1",
+              key2 = "value2",
+            }
+          }
+        }
+        local expected = {
+          ["key1"] = "value1",
+          ["key2"] = "value2",
+          ["kubernetes.io/metadata.name"] = "demo",
+          ["new-label"] = "hello-world",
+        }
+        local ns = client:namespaces():patch("demo", patch)
+        assert.are.same(expected, ns:labels())
       end)
 
       it("should be able to create/delete one", function()

@@ -10,6 +10,7 @@ local https = require "ssl.https"
 local json = require "json"
 
 local core_v1 = require "kube.api.core_v1"
+local batch_v1 = require "kube.api.batch_v1"
 
 -- Mock client used to fake https requests. Always returns empty response and never fails.
 local mock_https = {
@@ -57,12 +58,15 @@ local api = {}
 api.Client = {}
 
 -- Client contructor.
-function api.Client:new(config, mock)
+function api.Client:new(config, panic, mock)
   mock = mock or false
+  panic = panic or false
   local o = {
     conf_ = config,
     url_ = config:server_addr(),
-    https_ = mock and mock_https or https
+    api_base_ = "api",
+    https_ = mock and mock_https or https,
+    panic_ = panic,
   }
   self.__index = self
   setmetatable(o, self)
@@ -70,20 +74,25 @@ function api.Client:new(config, mock)
 end
 
 -- Perform a raw API call. This returns a string of the body of the response.
-function api.Client:raw_call(method, path, body, query)
-  local url = self.url_ .. "/api/" .. path
+function api.Client:raw_call(method, path, body, query, style)
+  local url = string.format("%s/%s/%s", self.url_, self.api_base_, path)
   if query then
     local query_str = build_query(query)
     url = url .. '?' .. query_str
   end
+  style = style or "merge"
   local headers = self.conf_:headers()
-  local source
+  local source = nil
   local body_str = ""
   if body then
     body_str = json.encode(body)
     source = ltn12.source.string(body_str)
-    headers["Content-Type"] = "application/json";
     headers["Content-Length"] = #body_str;
+    if method == "PATCH" then
+      headers["Content-Type"] = string.format("application/%s-patch+json", style);
+    else
+      headers["Content-Type"] = "application/json";
+    end
   end
   local resp = {}
   local params = {
@@ -103,23 +112,31 @@ function api.Client:raw_call(method, path, body, query)
   }
   local worked, code, _ = self.https_.request(params)
   if not worked or code < 200 or code >= 300 then
-    return nil, string.format("failed to perform API call: %s %s\n%s", method, url, body_str), code
+    local err_msg = string.format("failed to perform API call: %s %s\nbody: %s\nerror: %s", method, url, body_str, table.concat(resp))
+    if self.panic_ then
+      error("Code "..code..": "..(err_msg or "unknown error"))
+    end
+    return table.concat(resp), err_msg, code
   end
-  return table.concat(resp), info
+  return table.concat(resp), info, code
 end
 
 -- Perform a raw API call which returns a table structure of the response.
-function api.Client:call(method, path, body, query)
-  local resp, msg, code = self:raw_call(method, path, body, query)
-  if not resp then
-    error("Code "..code..": "..(msg or "unknown error"))
-  end
-  return json.decode(resp), msg
+function api.Client:call(method, path, body, query, style)
+  local resp, info, code = self:raw_call(method, path, body, query, style)
+  return json.decode(resp), info, code
 end
 
 -- Get a Core V1 API client
 function api.Client:corev1()
+  self.api_base_ = "api"
   return core_v1.Client:new(self)
+end
+
+-- Get a Batch V1 API client
+function api.Client:batchv1()
+  self.api_base_ = "apis"
+  return batch_v1.Client:new(self)
 end
 
 return api
