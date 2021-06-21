@@ -43,10 +43,12 @@ local api = {}
 api.Client = {}
 
 -- Client contructor.
-function api.Client:new(config)
+function api.Client:new(config, mock)
+  mock = mock or false
   local o = {
     conf_ = config,
     url_ = config:server_addr(),
+    mock_ = mock
   }
   self.__index = self
   setmetatable(o, self)
@@ -79,20 +81,29 @@ function api.Client:raw_call(method, path, body, query)
     sink = ltn12.sink.table(resp),
     headers = headers,
   }
+  local info = {
+    method = method,
+    url = url,
+    headers = headers,
+    body = body
+  }
+  if self.mock_ then
+    return '{"items": []}', info
+  end
   local worked, code, _ = https.request(params)
   if not worked or code < 200 or code >= 300 then
     return nil, string.format("failed to perform API call: %s %s\n%s", method, url, body_str), code
   end
-  return table.concat(resp)
+  return table.concat(resp), info
 end
 
 -- Perform a raw API call which returns a table structure of the response.
 function api.Client:call(method, path, body, query)
-  local resp, err_msg, code = self:raw_call(method, path, body, query)
+  local resp, msg, code = self:raw_call(method, path, body, query)
   if not resp then
-    error("Code "..code..": "..(err_msg or "unknown error"))
+    error("Code "..code..": "..(msg or "unknown error"))
   end
-  return json.decode(resp)
+  return json.decode(resp), msg
 end
 
 -- Get a Core V1 API client
