@@ -1,9 +1,9 @@
 package = "luakube"
-version = "0.1.0-1"
+version = "0.1.0alpha-0"
 
 source = {
 	url = "git://github.com/f4z3r/luakube",
-	tag = "v0.1.0-1",
+	tag = "v0.1.0alpha-0",
 }
 
 description = {
@@ -26,7 +26,7 @@ dependencies = {
 	"lua >= 5.3, <= 5.4",
 	"lyaml >= 6.2",
 	"luajson >= 1.3",
-	"luasocket >= 3.0",
+	"luasocket >= 3.0rc1",
 	"luasec >= 1.0",
 	"base64 >= 1.5",
 	"fun >= 0.1",
