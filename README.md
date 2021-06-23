@@ -1,11 +1,28 @@
-# LuaKube
+# luakube
 
 ![build status](https://github.com/jakobbeckmann/luakube/workflows/test/badge.svg)
 
 LuaKube is a simple client library to access the Kubernetes API. It does not abstract much from the
 API, allowing for full control, but provides some convenience functions for quick scripting.
 
-## Testing
+## Getting Started
+
+TODO(@jakob): write this
+
+## Documentation
+
+TODO(@jakob): write this
+
+## Roadmap
+
+The roadmap of the project is documented as [GitHub
+projects](https://github.com/f4z3r/luakube/projects).
+
+## Contributing
+
+### Testing
+
+#### Unit Tests
 
 > To install `busted`, run `luarocks install busted`.
 
@@ -15,7 +32,7 @@ Testing is done with `busted`:
 busted --exclude-tags=system --lua=$(which lua) spec
 ```
 
-### System Tests
+#### System Tests
 
 The system tests require `k3d` to be installed, and the `docker` service to be running.
 
@@ -32,12 +49,12 @@ busted --defer-print --lua=$(which lua) spec
 > The `--lua` flag is required when running shims with several lua installations other than the
 > system installation.
 
-## Development
+### Development
 
 This is used to track the progress of the development. It should show the current state of the
 library, including what is supported and what not.
 
-### Progress
+#### Progress
 
 - [x] Accept both strings and tables for objects
 - [ ] Define examples and run them as tests with `#example` tag.
