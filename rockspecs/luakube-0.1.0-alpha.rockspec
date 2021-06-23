@@ -2,8 +2,8 @@ package = "luakube"
 version = "0.1.0-alpha"
 
 source = {
-	-- url = "http://luaforge.net/frs/download.php/3637/luajson-0.10.tar.bz2",
-	-- md5 = "0b6fa5e3a07daabe79241922b0bfda92"
+	url = "git://github.com/f4z3r/luakube",
+	tag = "v0.1.0-alpha",
 }
 
 description = {
@@ -23,7 +23,7 @@ description = {
 }
 
 dependencies = {
-	"lua >= 5.3",
+	"lua >= 5.3, <= 5.4",
 	"lyaml >= 6.2",
 	"luajson >= 1.3",
 	"luasocket >= 3.0",
@@ -38,5 +38,9 @@ build = {
 		kube = "src/kube.lua",
 		["kube.config"] = "src/kube/config.lua",
 		["kube.api"] = "src/kube/api.lua",
+		["kube.api.utils"] = "src/kube/api/utils.lua",
+		["kube.api.objects"] = "src/kube/api/objects.lua",
+		["kube.api.core_v1"] = "src/kube/api/core_v1.lua",
+		["kube.api.batch_v1"] = "src/kube/api/batch_v1.lua",
 	}
 }
