@@ -1,9 +1,9 @@
 package = "luakube"
-version = "0.1.0-alpha"
+version = "0.1.0-1"
 
 source = {
 	url = "git://github.com/f4z3r/luakube",
-	tag = "v0.1.0-alpha",
+	tag = "v0.1.0-1",
 }
 
 description = {
