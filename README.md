@@ -64,6 +64,7 @@ library, including what is supported and what not.
   - [x] Bootstrap Token
   - [x] Static Token
   - [ ] X509 Certificate
+  - [x] Webhook Token
   - [ ] OIDC
   - [ ] Proxy
 - [ ] CoreV1

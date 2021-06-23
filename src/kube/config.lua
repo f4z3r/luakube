@@ -8,6 +8,7 @@ Description:
 
 local yaml = require "lyaml"
 local fun = require "fun"
+local base64 = require "base64"
 
 local KubeConfig = {}
 
@@ -126,12 +127,31 @@ function conf.Config:server_addr()
   return self.addr_
 end
 
+-- TODO(@jakob): better error handling
+local function write_b64_file(filepath, data)
+  local decoded = base64.decode(data)
+  local fh = assert(io.open(filepath, "w"))
+  fh:write(decoded)
+  fh:close()
+end
+
+-- TODO(@jakob): storing these files in /tmp is not secure
 local function init_config(config)
   local user = config.kube_:user(config:username())
   local cluster = config.kube_:cluster(config:cluster())
   config.addr_ = cluster.server
   if user.token then
     config.token_ = user.token
+  elseif user["client-certificate"] then
+    config.cert_file_ = user["client-certificate"]
+    config.key_file_ = user["client-key"]
+  elseif user["client-certificate-data"] then
+    config.cert_file_ = "/tmp/luakube-cert.pem"
+    write_b64_file(config.cert_file_, user["client-certificate-data"])
+    os.execute(string.format('chmod 600 "%s"', config.cert_file_))
+    config.key_file_ = "/tmp/luakube-key.pem"
+    write_b64_file(config.key_file_, user["client-key-data"])
+    os.execute(string.format('chmod 600 "%s"', config.key_file_))
   else
     return nil, "only token logins are currently supported"
   end
@@ -155,7 +175,17 @@ function conf.Config:headers()
       authorization = "Bearer "..self.token_
     }
   end
-  return nil, "no token is set in current configuration"
+  return {}
+end
+
+-- Returns the client certificate filepath
+function conf.Config:cert()
+  return self.cert_file_
+end
+
+-- Returns the client key filepath
+function conf.Config:key()
+  return self.key_file_
 end
 
 -- Return a configuration loaded from the kube config at path and set to context ctxt.
