@@ -103,6 +103,8 @@ function api.Client:raw_call(method, path, body, query, style)
     source = source,
     sink = ltn12.sink.table(resp),
     headers = headers,
+    certificate = self.conf_:cert(),
+    key = self.conf_:key()
   }
   local info = {
     method = method,
