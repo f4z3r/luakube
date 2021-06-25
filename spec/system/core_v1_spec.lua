@@ -88,6 +88,7 @@ describe("Core V1 #system", function()
         local labels = ns:labels()
         assert.is_nil(labels["new-label"])
         labels["new-label"] = "hello-world"
+        ns:set_labels(labels)
         ns_client:update(ns)
         utils.sleep(1)
         local updated_ns = ns_client:get("demo")
@@ -168,6 +169,7 @@ describe("Core V1 #system", function()
         local labels = node:labels()
         assert.is_nil(labels["new-label"])
         labels["new-label"] = "hello-world"
+        node:set_labels(labels)
         node_client:update(node)
         utils.sleep(1)
         local updated_node = node_client:get(node:name())
@@ -217,6 +219,7 @@ describe("Core V1 #system", function()
         local labels = pod:labels()
         assert.is_nil(labels["new-label"])
         labels["new-label"] = "hello-world"
+        pod:set_labels(labels)
         pod_client:update(pod)
         utils.sleep(1)
         local updated_pod = pod_client:get(pod:name())
@@ -279,6 +282,7 @@ spec:
         local labels = svc:labels()
         assert.is_nil(labels["new-label"])
         labels["new-label"] = "hello-world"
+        svc:set_labels(labels)
         svc_client:update(svc)
         utils.sleep(1)
         local updated_svc = svc_client:get(svc:name())
@@ -307,7 +311,7 @@ spec:
         local svc = client:services(svc_obj.metadata.namespace):get(svc_obj.metadata.name)
         assert.are.equal(svc_obj.spec.type, svc.spec.type)
         local status = client:services(svc_obj.metadata.namespace):delete(svc_obj.metadata.name)
-        assert.are.equal("Success", status.status)
+        assert.is_not_true(status:is_failure())
       end)
     end)
 
@@ -365,7 +369,7 @@ spec:
         assert.are.equal(cm_obj.metadata.name, cm:name())
         assert.are.equal(cm_obj.data.url, cm.data.url)
         local status = client:configmaps(cm_obj.metadata.namespace):delete(cm_obj.metadata.name)
-        assert.are.equal("Success", status.status)
+        assert.is_not_true(status:is_failure())
       end)
     end)
 
@@ -418,7 +422,119 @@ spec:
         local updated_sec = client:secrets(sec:namespace()):get(sec:name())
         assert.are.equal("c3VwZXJzZWNyZXQ=", updated_sec.data.password)
         local status = client:secrets(sec_obj.metadata.namespace):delete(sec_obj.metadata.name)
-        assert.are.equal("Success", status.status)
+        assert.is_not_true(status:is_failure())
+      end)
+    end)
+
+    describe("inspecting service accounts", function()
+      it("should be able to return all", function()
+        local serviceaccounts = client:serviceaccounts():get()
+        assert.are.equal(41, #serviceaccounts)
+      end)
+
+      it("should be able to return a specific one", function()
+        local sa = client:serviceaccounts("demo"):get("admin")
+        assert.is_not_nil(sa.secrets)
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:serviceaccounts("kube-system").status)
+        assert.is_nil(client:serviceaccounts("kube-system").update_status)
+      end)
+
+      it("should be able to return all in list", function()
+        local salist = client:serviceaccounts():list()
+        assert.are.equal("ServiceAccountList", salist.kind)
+        assert.are.equal("v1", salist.apiVersion)
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local secs = client:serviceaccounts("kube-system"):get()
+        assert.are.equal(36, #secs)
+      end)
+
+      it("should be able to create, update, and delete one", function()
+        local sa_obj = {
+          metadata = {
+            name = "demo-sa-test",
+            namespace = "demo",
+          },
+          automountServiceAccountToken = true
+        }
+        local _ = client:serviceaccounts():create(sa_obj)
+        local sa = client:serviceaccounts(sa_obj.metadata.namespace):get(sa_obj.metadata.name)
+        assert.are.equal(sa_obj.automountServiceAccountToken, sa.automountServiceAccountToken)
+        sa:set_labels({["test-label"] = "jbe"})
+        local status = client:serviceaccounts():update(sa)
+        assert.is_not_true(status:is_failure())
+        utils.sleep(1)
+        local updated_sa = client:serviceaccounts(sa:namespace()):get(sa:name())
+        assert.are.equal("jbe", updated_sa:labels()["test-label"])
+        status = client:serviceaccounts(sa_obj.metadata.namespace):delete(sa_obj.metadata.name)
+        assert.is_not_true(status:is_failure())
+      end)
+    end)
+
+    describe("inspecting endpoints", function()
+      it("should be able to return all", function()
+        local endpoints = client:endpoints():get()
+        assert.are.equal(6, #endpoints)
+      end)
+
+      it("should be able to return a specific one", function()
+        local ep = client:endpoints("kube-system"):get("kube-dns")
+        assert.are.equal("Endpoints", ep.kind)
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:endpoints("kube-system").status)
+        assert.is_nil(client:endpoints("kube-system").update_status)
+      end)
+
+      it("should be able to return all in list", function()
+        local eplist = client:endpoints():list()
+        assert.are.equal("EndpointsList", eplist.kind)
+        assert.are.equal("v1", eplist.apiVersion)
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local secs = client:endpoints("kube-system"):get()
+        assert.are.equal(4, #secs)
+      end)
+
+      it("should be able to create, update, and delete one", function()
+        local ep_obj = {
+          metadata = {
+            name = "demo-ep-test",
+            namespace = "demo",
+          },
+          subsets = {
+            {
+              addresses = {
+                {
+                  ip = "10.42.1.254",
+                }
+              },
+              ports = {
+                {
+                  name = "dns-tcp",
+                  port = 53,
+                  protocol = "TCP"
+                }
+              }
+            }
+          }
+        }
+        local _ = client:endpoints():create(ep_obj)
+        local ep = client:endpoints(ep_obj.metadata.namespace):get(ep_obj.metadata.name)
+        assert.are.equal(1, #ep_obj.subsets)
+        ep.subsets[1].ports[1].name = "new-name"
+        client:endpoints():update(ep)
+        utils.sleep(1)
+        local updated_ep = client:endpoints(ep:namespace()):get(ep:name())
+        assert.are.equal("new-name", updated_ep.subsets[1].ports[1].name)
+        local status = client:endpoints(ep_obj.metadata.namespace):delete(ep_obj.metadata.name)
+        assert.is_not_true(status:is_failure())
       end)
     end)
   end)

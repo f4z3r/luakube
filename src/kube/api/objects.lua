@@ -25,16 +25,6 @@ end
 
 objects.APIObject = objects.Response:new({})
 
-function objects.APIObject:new(o)
-  if o and o.is_failure and o:is_failure() then
-    return o
-  end
-  o = o or {}
-  self.__index = self
-  setmetatable(o, self)
-  return o
-end
-
 function objects.APIObject:name()
   return self.metadata.name
 end
@@ -43,8 +33,16 @@ function objects.APIObject:labels()
   return self.metadata.labels or {}
 end
 
+function objects.APIObject:set_labels(labels)
+  self.metadata.labels = labels
+end
+
 function objects.APIObject:annotations()
   return self.metadata.annotations or {}
+end
+
+function objects.APIObject:set_annotations(annotations)
+  self.metadata.annotations = annotations
 end
 
 function objects.APIObject:uid()
