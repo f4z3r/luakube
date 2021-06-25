@@ -1167,6 +1167,162 @@ spec:
         assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/persistentvolumeclaims?dryRun=true&labelSelector=app%3Dto-delete")
       end)
     end)
+
+    describe("inspecting persistentvolumes", function()
+      it("should be able to return all", function()
+        local _, info = client:pv():get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/persistentvolumes")
+      end)
+
+      it("should be able to return a specific one", function()
+        local _, info = client:pv("kube-system"):get("persist-vol")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/persistentvolumes/persist-vol")
+      end)
+
+      it("should be able to return the status of a specific one", function()
+        local _, info = client:pv("demo"):status("storage")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/persistentvolumes/storage/status")
+      end)
+
+      it("should be able to return all in list", function()
+        local _, info = client:pv():list()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/persistentvolumes")
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local _, info = client:pv("kube-system"):get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/persistentvolumes")
+      end)
+
+      it("should be able to update one", function()
+        local pv_obj = {
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "PersistentVolume",
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          }
+        }
+        local _, info = client:pv("demo"):update(pv_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/persistentvolumes/storage")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to update the status of one", function()
+        local pv_obj = {
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          },
+          status = {
+            accessModes = {
+              "ReadOnly",
+              "ReadWrite"
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "PersistentVolume",
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          },
+          status = {
+            accessModes = {
+              "ReadOnly",
+              "ReadWrite"
+            }
+          }
+        }
+        local _, info = client:pv("demo"):update_status(pv_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/persistentvolumes/storage/status")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to create one", function()
+        local pv_obj = {
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "PersistentVolume",
+          metadata = {
+            name = "storage",
+            namespace = "demo",
+          },
+          spec = {
+            capacity = {
+              storage = "5Gi"
+            }
+          }
+        }
+        local _, info = client:pv("demo"):create(pv_obj)
+        assert.are.equal("POST", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/persistentvolumes")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to delete one", function()
+        local _, info = client:pv("demo"):delete("storage")
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/persistentvolumes/storage")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:pv():delete_collection({}, params)
+        end)
+        local _, info = client:pv("kube-system"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/persistentvolumes?dryRun=true&labelSelector=app%3Dto-delete")
+      end)
+    end)
   end)
 end)
 

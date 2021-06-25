@@ -97,6 +97,14 @@ local persistant_volume_claim_base = {
 core_v1.Client.persistentvolumeclaims = utils.generate_object_client("persistentvolumeclaims", persistant_volume_claim_base, true)
 core_v1.Client.pvc = core_v1.Client.persistentvolumeclaims
 
+-- PersistentVolumes
+local persistant_volume_base = {
+  apiVersion = core_v1.version_string,
+  kind = "PersistentVolume",
+}
+core_v1.Client.persistentvolumes = utils.generate_object_client("persistentvolumes", persistant_volume_base, true)
+core_v1.Client.pv = core_v1.Client.persistentvolumes
+
 return core_v1
 
 
