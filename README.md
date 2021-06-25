@@ -96,6 +96,8 @@ library, including what is supported and what not.
   - [x] Secret
   - [x] ServiceAccounts
   - [x] Endpoints
+  - [x] PersistentVolumeClaims
+  - [x] PersistentVolumes
 - [ ] BatchV1
   - [ ] Jobs
     - [x] Get
