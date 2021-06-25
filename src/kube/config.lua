@@ -136,6 +136,7 @@ local function write_b64_file(filepath, data)
 end
 
 -- TODO(@jakob): storing these files in /tmp is not secure
+-- TODO(@jakob): better error handling
 local function init_config(config)
   local user = config.kube_:user(config:username())
   local cluster = config.kube_:cluster(config:cluster())
