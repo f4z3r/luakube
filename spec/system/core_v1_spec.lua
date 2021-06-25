@@ -16,7 +16,7 @@ describe("Core V1 #system", function()
   local name
   setup(function()
     io.write("creating test cluster for core v1 system testing...\n")
-    name, tear = utils.create_k3d_cluster()
+    name, tear = utils.create_k3d_cluster(true)
     utils.initialize_deployments()
     utils.sleep(30)
     local conf = config.from_kube_config()

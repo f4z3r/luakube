@@ -70,8 +70,7 @@ local function delete_k3d_cluster(name, logfile)
 end
 
 local function initialize_sa(user)
-  local worked = os.execute("kubectl create ns demo")
-  worked = worked and os.execute("kubectl apply -f assets/sa.yaml")
+  local worked = os.execute("kubectl apply -f assets/sa.yaml")
   worked = worked and os.execute("kubectl apply -f assets/crb.yaml")
   local secret = run('kubectl -n demo get sa/admin -o jsonpath="{.secrets[0].name}"')
   local token = run(string.format('kubectl -n demo get secret %s -o json | jq -r ".data.token" | base64 -d', secret))
@@ -90,7 +89,7 @@ function utils.initialize_deployments()
   return worked
 end
 
-function utils.create_k3d_cluster()
+function utils.create_k3d_cluster(create_user)
   local logfile = os.tmpname()
   local time = os.date("%H%M%S", os.time())
   local name = "luakube-"..time
@@ -99,8 +98,11 @@ function utils.create_k3d_cluster()
   if not os.execute("kubectl cluster-info >> "..logfile) == 0 then
     error("failed to create k3d cluster for testing: "..logfile)
   end
-  local username = "admin@k3d-"..name
-  assert(initialize_sa(username))
+  os.execute("kubectl create ns demo")
+  if create_user then
+    local username = "admin@k3d-"..name
+    assert(initialize_sa(username))
+  end
   return name, function () delete_k3d_cluster(name, logfile) end
 end
 
