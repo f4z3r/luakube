@@ -152,6 +152,11 @@ describe("Core V1 ", function()
         assert.are.equal("DELETE", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo")
       end)
+
+      it("should not be able to delete several", function()
+        local ns_client = client:namespaces()
+        assert.is_nil(ns_client.delete_collection)
+      end)
     end)
 
     describe("inspecting nodes", function()
@@ -235,6 +240,22 @@ describe("Core V1 ", function()
         assert.is.ending_with(info.url, "/api/v1/nodes/demo")
         assert.are.same(patch, info.body)
         assert.are.equal("application/merge-patch+json", info.headers["Content-Type"])
+      end)
+
+      it("should be able to delete one", function()
+        local _, info = client:nodes():delete("demo")
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes/demo")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "os=ubuntu",
+          dryRun = true
+        }
+        local _, info = client:nodes():delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/nodes?dryRun=true&labelSelector=os%3Dubuntu")
       end)
     end)
 
@@ -336,6 +357,19 @@ describe("Core V1 ", function()
         local _, info = client:pods("kube-system"):delete("coredns")
         assert.are.equal("DELETE", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/coredns")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:pods():delete_collection({}, params)
+        end)
+        local _, info = client:pods("kube-system"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods?dryRun=true&labelSelector=app%3Dto-delete")
       end)
 
       it("should be able to create one", function()
@@ -615,6 +649,19 @@ spec:
         assert.are.equal("DELETE", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo/configmaps/config")
       end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:configmaps():delete_collection({}, params)
+        end)
+        local _, info = client:configmaps("demo"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/configmaps?dryRun=true&labelSelector=app%3Dto-delete")
+      end)
     end)
 
     describe("inspecting secrets", function()
@@ -709,6 +756,271 @@ spec:
         local _, info = client:secrets("demo"):delete("sec")
         assert.are.equal("DELETE", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo/secrets/sec")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:secrets():delete_collection({}, params)
+        end)
+        local _, info = client:secrets("kube-system"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/secrets?dryRun=true&labelSelector=app%3Dto-delete")
+      end)
+    end)
+
+    describe("inspecting service accounts", function()
+      it("should be able to return all", function()
+        local _, info = client:serviceaccounts():get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/serviceaccounts")
+      end)
+
+      it("should be able to return a specific one", function()
+        local _, info = client:serviceaccounts("kube-system"):get("admin")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/serviceaccounts/admin")
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:serviceaccounts("kube-system").status)
+        assert.is_nil(client:serviceaccounts("kube-system").update_status)
+      end)
+
+      it("should be able to return all in list", function()
+        local _, info = client:serviceaccounts():list()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/serviceaccounts")
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local _, info = client:serviceaccounts("kube-system"):get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/serviceaccounts")
+      end)
+
+      it("should be able to update one", function()
+        local sa_obj = {
+          metadata = {
+            name = "sa-test",
+            namespace = "demo",
+          },
+          automountServiceAccountToken = true
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "ServiceAccount",
+          metadata = {
+            name = "sa-test",
+            namespace = "demo",
+          },
+          automountServiceAccountToken = true
+        }
+        local _, info = client:serviceaccounts("demo"):update(sa_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/serviceaccounts/sa-test")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to create one", function()
+        local sa_obj = {
+          metadata = {
+            name = "sa-test",
+            namespace = "demo",
+          },
+          automountServiceAccountToken = true
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "ServiceAccount",
+          metadata = {
+            name = "sa-test",
+            namespace = "demo",
+          },
+          automountServiceAccountToken = true
+        }
+        local _, info = client:serviceaccounts("demo"):create(sa_obj)
+        assert.are.equal("POST", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/serviceaccounts")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to delete one", function()
+        local _, info = client:serviceaccounts("demo"):delete("sa-test")
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/serviceaccounts/sa-test")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:serviceaccounts():delete_collection({}, params)
+        end)
+        local _, info = client:serviceaccounts("kube-system"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/serviceaccounts?dryRun=true&labelSelector=app%3Dto-delete")
+      end)
+    end)
+
+    describe("inspecting endpoints", function()
+      it("should be able to return all", function()
+        local _, info = client:endpoints():get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/endpoints")
+      end)
+
+      it("should be able to return a specific one", function()
+        local _, info = client:endpoints("kube-system"):get("external-ep")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/endpoints/external-ep")
+      end)
+
+      it("should not have a status", function()
+        assert.is_nil(client:endpoints("kube-system").status)
+        assert.is_nil(client:endpoints("kube-system").update_status)
+      end)
+
+      it("should be able to return all in list", function()
+        local _, info = client:endpoints():list()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/endpoints")
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local _, info = client:endpoints("kube-system"):get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/endpoints")
+      end)
+
+      it("should be able to update one", function()
+        local ep_obj = {
+          metadata = {
+            name = "kube-dns",
+            namespace = "demo",
+          },
+          subsets = {
+            {
+              addresses = {
+                {
+                  ip = "10.42.1.254",
+                }
+              },
+              ports = {
+                {
+                  name = "dns-tcp",
+                  port = 53,
+                  protocol = "TCP"
+                }
+              }
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Endpoints",
+          metadata = {
+            name = "kube-dns",
+            namespace = "demo",
+          },
+          subsets = {
+            {
+              addresses = {
+                {
+                  ip = "10.42.1.254",
+                }
+              },
+              ports = {
+                {
+                  name = "dns-tcp",
+                  port = 53,
+                  protocol = "TCP"
+                }
+              }
+            }
+          }
+        }
+        local _, info = client:endpoints("demo"):update(ep_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/endpoints/kube-dns")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to create one", function()
+        local ep_obj = {
+          metadata = {
+            name = "kube-dns",
+            namespace = "demo",
+          },
+          subsets = {
+            {
+              addresses = {
+                {
+                  ip = "10.42.1.254",
+                }
+              },
+              ports = {
+                {
+                  name = "dns-tcp",
+                  port = 53,
+                  protocol = "TCP"
+                }
+              }
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Endpoints",
+          metadata = {
+            name = "kube-dns",
+            namespace = "demo",
+          },
+          subsets = {
+            {
+              addresses = {
+                {
+                  ip = "10.42.1.254",
+                }
+              },
+              ports = {
+                {
+                  name = "dns-tcp",
+                  port = 53,
+                  protocol = "TCP"
+                }
+              }
+            }
+          }
+        }
+        local _, info = client:endpoints("demo"):create(ep_obj)
+        assert.are.equal("POST", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/endpoints")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to delete one", function()
+        local _, info = client:endpoints("demo"):delete("ep-test")
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/endpoints/ep-test")
+      end)
+
+      it("should be able to delete several", function()
+        local params = {
+          labelSelector = "app=to-delete",
+          dryRun = true
+        }
+        assert.has.errors(function()
+          local _, _ = client:endpoints():delete_collection({}, params)
+        end)
+        local _, info = client:endpoints("kube-system"):delete_collection({}, params)
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/endpoints?dryRun=true&labelSelector=app%3Dto-delete")
       end)
     end)
   end)

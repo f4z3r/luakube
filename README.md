@@ -76,7 +76,7 @@ library, including what is supported and what not.
     - [x] Patch
     - [x] Create
     - [x] Delete
-    - [ ] Delete Collection
+    - [x] Delete Collection
     - [x] Logs
     - [ ] EphemeralContainers
     - [ ] Exec
@@ -94,6 +94,8 @@ library, including what is supported and what not.
   - [x] PodTemplates
   - [x] ConfigMap
   - [x] Secret
+  - [x] ServiceAccounts
+  - [x] Endpoints
 - [ ] BatchV1
   - [ ] Jobs
     - [x] Get
@@ -103,6 +105,6 @@ library, including what is supported and what not.
     - [x] Patch
     - [x] Create
     - [x] Delete
-    - [ ] Delete Collection
+    - [x] Delete Collection
     - [ ] Watch Streams
   - [ ] CronJobs

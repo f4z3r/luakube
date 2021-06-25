@@ -47,13 +47,17 @@ local function list_converter(namespaced)
   return res
 end
 
-function utils.generate_object_client(api, concat, namespaced, with_status)
+function utils.generate_object_client(api, concat, namespaced, with_status, with_collection)
   return function(parent, ns)
     if ns then
       assert(namespaced, "cannot provide namespace on non-namespaced object type")
     end
     if with_status == nil then
       with_status = true
+    end
+
+    if with_collection == nil then
+      with_collection = true
     end
 
     local client = {}
@@ -168,7 +172,17 @@ function utils.generate_object_client(api, concat, namespaced, with_status)
     end
 
     function client.delete(self, name, query)
-      return self:call("DELETE", "/"..name, nil, query)
+      assert(not namespaced or self.namespaced_, "can only delete object by name when providing namespace")
+      local resp, info, code = self:call("DELETE", "/"..name, nil, query)
+      return objects.Response:new(resp), info, code
+    end
+
+    if with_collection then
+      function client.delete_collection(self, body, query)
+        assert(not namespaced or self.namespaced_, "can only delete collection by name when providing namespace")
+        local resp, info, code = self:call("DELETE", "", body, query)
+        return objects.Response:new(resp), info, code
+      end
     end
 
     function client.list(self, query)
