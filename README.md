@@ -98,6 +98,11 @@ library, including what is supported and what not.
   - [x] Endpoints
   - [x] PersistentVolumeClaims
   - [x] PersistentVolumes
+  - [ ] ReplicationController
+  - [ ] LimitRange
+  - [ ] ResourceQuota
+  - [ ] Binding
+  - [ ] ComponentStatus
 - [ ] BatchV1
   - [ ] Jobs
     - [x] Get
