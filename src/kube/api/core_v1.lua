@@ -29,6 +29,7 @@ local ns_base = {
   kind = "Namespace",
 }
 core_v1.Client.namespaces = utils.generate_object_client("namespaces", ns_base, false, true, false)
+core_v1.Client.ns = core_v1.Client.namespaces
 
 -- Pods
 local pod_base = {
@@ -54,6 +55,7 @@ local service_base = {
   kind = "Service",
 }
 core_v1.Client.services = utils.generate_object_client("services", service_base, true, true, false)
+core_v1.Client.svc = core_v1.Client.services
 
 -- ConfigMaps
 local configmap_base = {
@@ -61,6 +63,7 @@ local configmap_base = {
   kind = "ConfigMap",
 }
 core_v1.Client.configmaps = utils.generate_object_client("configmaps", configmap_base, true, false)
+core_v1.Client.cm = core_v1.Client.configmaps
 
 -- Secrets
 local secret_base = {
@@ -68,6 +71,7 @@ local secret_base = {
   kind = "Secret",
 }
 core_v1.Client.secrets = utils.generate_object_client("secrets", secret_base, true, false)
+core_v1.Client.sec = core_v1.Client.secrets
 
 -- ServiceAccounts
 local service_account_base = {
@@ -75,6 +79,7 @@ local service_account_base = {
   kind = "ServiceAccount",
 }
 core_v1.Client.serviceaccounts = utils.generate_object_client("serviceaccounts", service_account_base, true, false)
+core_v1.Client.sa = core_v1.Client.serviceaccounts
 
 -- Endpoints
 local endpoints_base = {
@@ -82,6 +87,15 @@ local endpoints_base = {
   kind = "Endpoints",
 }
 core_v1.Client.endpoints = utils.generate_object_client("endpoints", endpoints_base, true, false)
+core_v1.Client.ep = core_v1.Client.endpoints
+
+-- PersistentVolumeClaims
+local persistant_volume_claim_base = {
+  apiVersion = core_v1.version_string,
+  kind = "PersistentVolumeClaim",
+}
+core_v1.Client.persistentvolumeclaims = utils.generate_object_client("persistentvolumeclaims", persistant_volume_claim_base, true)
+core_v1.Client.pvc = core_v1.Client.persistentvolumeclaims
 
 return core_v1
 
