@@ -105,6 +105,30 @@ local persistant_volume_base = {
 core_v1.Client.persistentvolumes = utils.generate_object_client("persistentvolumes", persistant_volume_base, true)
 core_v1.Client.pv = core_v1.Client.persistentvolumes
 
+-- ReplicationControllers
+local replication_controller_base = {
+  apiVersion = core_v1.version_string,
+  kind = "ReplicationController",
+}
+core_v1.Client.replicationcontrollers = utils.generate_object_client("replicationcontrollers", replication_controller_base, true)
+core_v1.Client.rc = core_v1.Client.replicationcontrollers
+
+-- LimitRanges
+local limit_range_base = {
+  apiVersion = core_v1.version_string,
+  kind = "LimitRange",
+}
+core_v1.Client.limitranges = utils.generate_object_client("limitranges", limit_range_base, true, false)
+core_v1.Client.limit = core_v1.Client.limitranges
+
+-- ResourceQuota
+local resource_quota_base = {
+  apiVersion = core_v1.version_string,
+  kind = "ResourceQuota",
+}
+core_v1.Client.resourcequotas = utils.generate_object_client("resourcequotas", resource_quota_base, true)
+core_v1.Client.quota = core_v1.Client.resourcequotas
+
 return core_v1
 
 
