@@ -6,7 +6,10 @@ Description:
   Core V1 API specification.
 ]]--
 
+local yaml = require "lyaml"
+
 local utils = require "kube.api.utils"
+local objects = require "kube.api.objects"
 
 local core_v1 = {}
 
@@ -41,6 +44,49 @@ local extras = {
     assert(self.namespaced_, "can only pod logs when providing namespace")
     local path = string.format("/%s/log", name)
     return self:raw_call("GET", path, nil, query)
+  end,
+  ephemeralcontainers = function(parent, name)
+    assert(parent.namespaced_, "can only get ephemeral containers when providing a namespace")
+    local client = {}
+    setmetatable(client, parent)
+    client.client_ = parent.client_
+    client.api_ = "ephemeralcontainers"
+    client.path_ = string.format("/%s/%s", name, client.api_)
+
+    function client.call(self, method, path, body, query, style)
+      return parent:call(method, self.path_..path, body, query, style)
+    end
+
+    function client.raw_call(self, method, path, body, query, style)
+      return parent:raw_call(method, self.path_..path, body, query, style)
+    end
+
+    function client.get(self)
+      local obj, info, code = self:call("GET", "")
+      return objects.NamespacedAPIObject:new(obj), info, code
+    end
+
+    function client.update(self, obj, query)
+      if type(obj) == "string" then
+        obj = yaml.load(obj)
+      end
+      local concat = {
+        apiVersion = core_v1.version_string,
+        kind = "EphemeralContainers"
+      }
+      for key, val in pairs(concat) do
+        obj[key] = val
+      end
+      local resp, info, code = self:call("PUT", "", obj, query)
+      return objects.NamespacedAPIObject:new(resp), info, code
+    end
+
+    function client.patch(self, patch, query, style)
+      local resp, info, code = self:call("PATCH", "", patch, query, style)
+      return objects.NamespacedAPIObject:new(resp), info, code
+    end
+
+    return client
   end
 }
 core_v1.Client.pods = utils.generate_object_client("pods", pod_base, true, true, true, extras)

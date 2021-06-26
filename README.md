@@ -78,7 +78,7 @@ library, including what is supported and what not.
     - [x] Delete
     - [x] Delete Collection
     - [x] Logs
-    - [ ] EphemeralContainers
+    - [x] EphemeralContainers
     - [ ] Exec
   - [ ] Namespaces
     - [x] Get

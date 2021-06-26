@@ -412,6 +412,34 @@ spec:
         assert.is.ending_with(info.url, "/api/v1/namespaces/demo/pods")
         assert.are.same(expected, info.body)
       end)
+
+      it("should be able to get the ephemeralcontainers of one", function()
+        local _, info = client:pods("kube-system"):ephemeralcontainers("coredns"):get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/coredns/ephemeralcontainers")
+      end)
+
+      it("should be able to update the ephemeralcontainers of one", function()
+        local ephemeralcontainers = {
+          metadata = {
+            name = "coredns",
+            namespace = "kube-system"
+          },
+          ephemeralContainers = {}
+        }
+        local _, info = client:pods("kube-system"):ephemeralcontainers("coredns"):update(ephemeralcontainers)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/coredns/ephemeralcontainers")
+      end)
+
+      it("should be able to patch the ephemeralcontainers of one", function()
+        local patch = {
+          ephemeralContainers = {}
+        }
+        local _, info = client:pods("kube-system"):ephemeralcontainers("coredns"):patch(patch)
+        assert.are.equal("PATCH", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/coredns/ephemeralcontainers")
+      end)
     end)
 
     describe("inspecting services", function()
