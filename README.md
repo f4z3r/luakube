@@ -98,3 +98,7 @@ library, including what is supported and what not.
 - [ ] BatchV1
   - [x] Jobs
   - [x] CronJobs
+- [ ] AppsV1
+  - [x] Deployments
+  - [x] StatefulSets
+  - [x] DaemonSets
