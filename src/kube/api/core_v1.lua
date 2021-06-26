@@ -36,11 +36,14 @@ local pod_base = {
   apiVersion = core_v1.version_string,
   kind = "Pod",
 }
-core_v1.Client.pods = utils.generate_object_client("pods", pod_base, true)
-core_v1.Client.logs = function(self, ns, name, args)
-  local path = string.format("/namespaces/%s/%s/%s/log", ns, "pods", name)
-  return self:raw_call("GET", path, nil, args)
-end
+local extras = {
+  logs = function(self, name, query)
+    assert(self.namespaced_, "can only pod logs when providing namespace")
+    local path = string.format("/%s/log", name)
+    return self:raw_call("GET", path, nil, query)
+  end
+}
+core_v1.Client.pods = utils.generate_object_client("pods", pod_base, true, true, true, extras)
 
 -- PodTemplates
 local podtemplate_base = {

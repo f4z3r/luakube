@@ -291,7 +291,7 @@ describe("Core V1 ", function()
       end)
 
       it("should be able to get logs of a pod", function()
-        local _, info = client:logs("kube-system", "coredns", {tailLines = 25})
+        local _, info = client:pods("kube-system"):logs("coredns", {tailLines = 25})
         assert.are.equal("GET", info.method)
         assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/pods/coredns/log?tailLines=25")
       end)
