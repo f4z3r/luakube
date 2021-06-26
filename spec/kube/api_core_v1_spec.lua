@@ -122,6 +122,22 @@ describe("Core V1 ", function()
         assert.are.same(patch, info.body)
       end)
 
+      it("should be able to update the finalize of one", function()
+        local ns = {
+          metadata = {
+            name = "demo"
+          },
+          spec = {
+            finalizers = {
+              "MyFinalizer"
+            }
+          }
+        }
+        local _, info = client:namespaces():finalize(ns)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/finalize")
+      end)
+
       it("should be able to create one", function()
         local namespace = {
           metadata = {

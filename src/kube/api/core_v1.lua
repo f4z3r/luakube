@@ -31,7 +31,20 @@ local ns_base = {
   apiVersion = core_v1.version_string,
   kind = "Namespace",
 }
-core_v1.Client.namespaces = utils.generate_object_client("namespaces", ns_base, false, true, false)
+local extras = {
+  finalize = function(self, obj, query)
+    if type(obj) == "string" then
+      obj = yaml.load(obj)
+    end
+    for key, val in pairs(ns_base) do
+      obj[key] = val
+    end
+    local path = string.format("/%s/finalize", obj.metadata.name)
+    local resp, info, code = self:call("PUT", path, obj, query)
+    return objects.APIObject:new(resp), info, code
+  end
+}
+core_v1.Client.namespaces = utils.generate_object_client("namespaces", ns_base, false, true, false, extras)
 core_v1.Client.ns = core_v1.Client.namespaces
 
 -- Pods

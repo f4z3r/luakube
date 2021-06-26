@@ -80,15 +80,7 @@ library, including what is supported and what not.
     - [x] Logs
     - [x] EphemeralContainers
     - [ ] Exec
-  - [ ] Namespaces
-    - [x] Get
-    - [x] Get Status
-    - [x] Update Status
-    - [x] Update
-    - [ ] Update Finalizer
-    - [x] Patch
-    - [x] Create
-    - [x] Delete
+  - [x] Namespaces
   - [x] Nodes
   - [x] Services
   - [x] PodTemplates
