@@ -96,14 +96,5 @@ library, including what is supported and what not.
   - [ ] Binding (not meant to be used by end user)
   - [ ] ComponentStatus (deprecated)
 - [ ] BatchV1
-  - [ ] Jobs
-    - [x] Get
-    - [x] Get Status
-    - [x] Update Status
-    - [x] Update
-    - [x] Patch
-    - [x] Create
-    - [x] Delete
-    - [x] Delete Collection
-    - [ ] Watch Streams
-  - [ ] CronJobs
+  - [x] Jobs
+  - [x] CronJobs

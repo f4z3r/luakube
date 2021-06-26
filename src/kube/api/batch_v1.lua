@@ -22,4 +22,11 @@ local job_base = {
 }
 batch_v1.Client.jobs = utils.generate_object_client("jobs", job_base, true)
 
+local cronjob_base = {
+  apiVersion = batch_v1.version_string,
+  kind = "CronJob",
+}
+batch_v1.Client.cronjobs = utils.generate_object_client("cronjobs", cronjob_base, true)
+batch_v1.Client.cj = batch_v1.Client.cronjobs
+
 return batch_v1
