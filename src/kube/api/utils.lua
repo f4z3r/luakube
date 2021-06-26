@@ -47,7 +47,7 @@ local function list_converter(namespaced)
   return res
 end
 
-function utils.generate_object_client(api, concat, namespaced, with_status, with_collection)
+function utils.generate_object_client(api, concat, namespaced, with_status, with_collection, extras)
   return function(parent, ns)
     if ns then
       assert(namespaced, "cannot provide namespace on non-namespaced object type")
@@ -191,6 +191,11 @@ function utils.generate_object_client(api, concat, namespaced, with_status, with
         list.items[idx] = converter(namespaced):new(item)
       end
       return list, info, code
+    end
+
+    extras = extras or {}
+    for function_name, func in pairs(extras) do
+      client[function_name] = func
     end
 
     return client

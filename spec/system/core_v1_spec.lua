@@ -209,7 +209,7 @@ describe("Core V1 #system", function()
 
       it("should be able to get logs of a pod", function()
         local pod = client:pods():get({labelSelector = "k8s-app=kube-dns"})[1]
-        local logs = client:logs(pod:namespace(), pod:name(), {tailLines = 25})
+        local logs = client:pods(pod:namespace()):logs(pod:name(), {tailLines = 25})
         assert.is.containing(logs, "plugin/reload: Running configuration MD5")
       end)
 
