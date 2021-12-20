@@ -151,6 +151,13 @@ local endpoints_base = {
 core_v1.Client.endpoints = utils.generate_object_client("endpoints", endpoints_base, true, false)
 core_v1.Client.ep = core_v1.Client.endpoints
 
+-- Ingresses
+local ingresses_base = {
+  apiVersion = core_v1.version_string,
+  kind = "Ingress",
+}
+core_v1.Client.ingresses = utils.generate_object_client("ingresses", ingresses_base, true, true, false)
+
 -- PersistentVolumeClaims
 local persistant_volume_claim_base = {
   apiVersion = core_v1.version_string,
