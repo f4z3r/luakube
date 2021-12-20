@@ -157,6 +157,7 @@ local ingresses_base = {
   kind = "Ingress",
 }
 core_v1.Client.ingresses = utils.generate_object_client("ingresses", ingresses_base, true, true, false)
+core_v1.Client.ing = core_v1.Client.ingresses
 
 -- PersistentVolumeClaims
 local persistant_volume_claim_base = {
