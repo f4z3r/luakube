@@ -1068,6 +1068,193 @@ spec:
       end)
     end)
 
+    describe("inspecting ingresses", function()
+      it("should be able to return all", function()
+        local _, info = client:ingresses():get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/ingresses")
+      end)
+
+      it("should be able to return a specific one", function()
+        local _, info = client:ingresses("kube-system"):get("kube-dns")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/ingresses/kube-dns")
+      end)
+
+      it("should be able to return the status of a specific one", function()
+        local _, info = client:ingresses("kube-system"):status("kube-dns")
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/ingresses/kube-dns/status")
+      end)
+
+      it("should be able to return all in list", function()
+        local _, info = client:ingresses():list()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/ingresses")
+      end)
+
+      it("should be able to return all in the kube-system namespace", function()
+        local _, info = client:ingresses("kube-system"):get()
+        assert.are.equal("GET", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/kube-system/ingresses")
+      end)
+
+      it("should be able to update one", function()
+        local ing_obj = {
+          metadata = {
+            name = "demo-ing-test",
+            namespace = "demo",
+          },
+          spec = {
+            rules = {
+              {
+                host = "demo.example.com",
+                http = {
+                  paths: {
+                    {
+                      path: "/",
+                      pathType: "Prefix",
+                      backend: {
+                        serviceName: "demo-srv",
+                        servicePort: 80
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Ingress",
+          metadata = {
+            name = "demo-ing-test",
+            namespace = "demo",
+          },
+          spec = {
+            rules = {
+              {
+                host = "demo.example.com",
+                http = {
+                  paths: {
+                    {
+                      path: "/",
+                      pathType: "Prefix",
+                      backend: {
+                        serviceName: "demo-srv",
+                        servicePort: 80
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+        local _, info = client:ingresses("demo"):update(ing_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/ingresses/demo-ing-test")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to update the status of one", function()
+        local ing_obj = {
+          metadata = {
+            name = "demo-ing-test",
+            namespace = "demo",
+          },
+          spec = {
+            rules = {
+              {
+                host = "demo.example.com",
+                http = {
+                  paths: {
+                    {
+                      path: "/",
+                      pathType: "Prefix",
+                      backend: {
+                        serviceName: "demo-srv",
+                        servicePort: 80
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+        local _, info = client:ingresses("demo"):update_status(ing_obj)
+        assert.are.equal("PUT", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/ingresses/demo-ing-test/status")
+      end)
+
+      it("should be able to create one", function()
+        local ing_obj = {
+          metadata = {
+            name = "demo-ing-test",
+            namespace = "demo",
+          },
+          spec = {
+            rules = {
+              {
+                host = "demo.example.com",
+                http = {
+                  paths: {
+                    {
+                      path: "/",
+                      pathType: "Prefix",
+                      backend: {
+                        serviceName: "demo-srv",
+                        servicePort: 80
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+        local expected = {
+          apiVersion = "v1",
+          kind = "Ingress",
+          metadata = {
+            name = "demo-ing-test",
+            namespace = "demo",
+          },
+          spec = {
+            rules = {
+              {
+                host = "demo.example.com",
+                http = {
+                  paths: {
+                    {
+                      path: "/",
+                      pathType: "Prefix",
+                      backend: {
+                        serviceName: "demo-srv",
+                        servicePort: 80
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          }
+        }
+        local _, info = client:ingresses("demo"):create(ing_obj)
+        assert.are.equal("POST", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/ingresses")
+        assert.are.same(expected, info.body)
+      end)
+
+      it("should be able to delete one", function()
+        local _, info = client:ingresses("demo"):delete("ing")
+        assert.are.equal("DELETE", info.method)
+        assert.is.ending_with(info.url, "/api/v1/namespaces/demo/ingresses/ing")
+      end)
+    end)
+
     describe("inspecting pvcs", function()
       it("should be able to return all", function()
         local _, info = client:pvc():get()
