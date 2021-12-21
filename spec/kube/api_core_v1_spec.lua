@@ -1110,13 +1110,13 @@ spec:
               {
                 host = "demo.example.com",
                 http = {
-                  paths: {
+                  paths = {
                     {
-                      path: "/",
-                      pathType: "Prefix",
-                      backend: {
-                        serviceName: "demo-srv",
-                        servicePort: 80
+                      path = "/",
+                      pathType = "Prefix",
+                      backend = {
+                        serviceName = "demo-srv",
+                        servicePort = 80
                       }
                     }
                   }
@@ -1137,13 +1137,13 @@ spec:
               {
                 host = "demo.example.com",
                 http = {
-                  paths: {
+                  paths = {
                     {
-                      path: "/",
-                      pathType: "Prefix",
-                      backend: {
-                        serviceName: "demo-srv",
-                        servicePort: 80
+                      path = "/",
+                      pathType = "Prefix",
+                      backend = {
+                        serviceName = "demo-srv",
+                        servicePort = 80
                       }
                     }
                   }
@@ -1169,13 +1169,13 @@ spec:
               {
                 host = "demo.example.com",
                 http = {
-                  paths: {
+                  paths = {
                     {
-                      path: "/",
-                      pathType: "Prefix",
-                      backend: {
-                        serviceName: "demo-srv",
-                        servicePort: 80
+                      path = "/",
+                      pathType = "Prefix",
+                      backend = {
+                        serviceName = "demo-srv",
+                        servicePort = 80
                       }
                     }
                   }
@@ -1200,13 +1200,13 @@ spec:
               {
                 host = "demo.example.com",
                 http = {
-                  paths: {
+                  paths = {
                     {
-                      path: "/",
-                      pathType: "Prefix",
-                      backend: {
-                        serviceName: "demo-srv",
-                        servicePort: 80
+                      path = "/",
+                      pathType = "Prefix",
+                      backend = {
+                        serviceName = "demo-srv",
+                        servicePort = 80
                       }
                     }
                   }
@@ -1227,13 +1227,13 @@ spec:
               {
                 host = "demo.example.com",
                 http = {
-                  paths: {
+                  paths = {
                     {
-                      path: "/",
-                      pathType: "Prefix",
-                      backend: {
-                        serviceName: "demo-srv",
-                        servicePort: 80
+                      path = "/",
+                      pathType = "Prefix",
+                      backend = {
+                        serviceName = "demo-srv",
+                        servicePort = 80
                       }
                     }
                   }
