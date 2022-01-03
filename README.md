@@ -102,3 +102,6 @@ library, including what is supported and what not.
   - [x] Deployments
   - [x] StatefulSets
   - [x] DaemonSets
+- [x] NetworkingV1
+  - [x] Ingresses
+  - [x] IngressClasses
