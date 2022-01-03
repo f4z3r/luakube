@@ -12,6 +12,7 @@ local json = require "json"
 local core_v1 = require "kube.api.core_v1"
 local batch_v1 = require "kube.api.batch_v1"
 local apps_v1 = require "kube.api.apps_v1"
+local networking_v1 = require "kube.api.networking_v1"
 
 -- Mock client used to fake https requests. Always returns empty response and never fails.
 local mock_https = {
@@ -146,6 +147,12 @@ end
 function api.Client:appsv1()
   self.api_base_ = "apis"
   return apps_v1.Client:new(self)
+end
+
+-- Get a Networking V1 API client
+function api.Client:networkingv1()
+  self.api_base_ = "apis"
+  return networking_v1.Client:new(self)
 end
 
 return api
