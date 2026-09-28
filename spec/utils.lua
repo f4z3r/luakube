@@ -8,7 +8,7 @@ Description:
 
 local assert = require("luassert")
 local say = require("say")
-local json = require("json")
+local json = require("rapidjson")
 
 -- Custom assertions
 local function starting_with(state, arguments)

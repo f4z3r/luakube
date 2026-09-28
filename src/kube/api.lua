@@ -7,7 +7,7 @@ Description:
 
 local ltn12 = require "ltn12"
 local https = require "ssl.https"
-local json = require "json"
+local json = require "rapidjson"
 
 local core_v1 = require "kube.api.core_v1"
 local batch_v1 = require "kube.api.batch_v1"
