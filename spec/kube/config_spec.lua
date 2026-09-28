@@ -1,21 +1,15 @@
---[[
-Test suite for the Kubernetes configuration.
-]]--
-
-local config = require "kube.config"
+local config = require("kube.config")
 
 describe("The Kubernetes configuration", function()
-
   describe("given a local configuration", function()
-
     describe("which is empty", function()
-
       it("should fail to build configuration", function()
         local path = "assets/empty-config"
-        assert.has.errors(function() config.from_kube_config(path) end)
+        assert.has.errors(function()
+          config.from_kube_config(path)
+        end)
       end)
     end)
-
 
     describe("which is non-empty", function()
       local conf
@@ -65,7 +59,6 @@ describe("The Kubernetes configuration", function()
       end)
     end)
 
-
     describe("which is non-empty and initialized with a context", function()
       local conf
       before_each(function()
@@ -90,6 +83,5 @@ describe("The Kubernetes configuration", function()
         assert.are.equal("https://0.0.0.0:41101", conf:server_addr())
       end)
     end)
-
   end)
 end)

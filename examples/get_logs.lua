@@ -9,16 +9,14 @@ Description:
 local config = require "kube.config"
 local api = require "kube.api"
 
--- Use local kube config to connect to cluster
-local conf = config.from_kube_config()
-local global_client = api.Client:new(conf)
+local client = api.Client:new(config.from_kube_config(os.getenv("KUBECONFIG")))
+local logs = client:resource("v1", "Pod"):namespace("kube-system"):subresource("log")
+local pod_name = "coredns-7448499f4d-6khqb" -- replace with a pod on your cluster
 
--- Get the Core V1 client
-local client = global_client:corev1()
+-- Get the last three lines of logs from the coredns container as a string.
+local container_logs = logs:get_raw(pod_name, { tailLines = 3, container = "coredns" })
 
--- Get the last three lines of logs from the coredns container as a string
-local container_logs = client:pods("kube-system"):logs("coredns-7448499f4d-6khqb",
-                                                       {tailLines = 3, container = "coredns"})
+-- Get logs from the same container over the last 10 seconds.
+local last_logs = logs:get_raw(pod_name, { sinceSeconds = 10, container = "coredns" })
 
--- Get the logs over the last 10 seconds for all containers in the pod
-local last_logs = client:logs("kube-system"):logs("coredns-7448499f4d-6khqb", {sinceSeconds = 10})
+print(container_logs, last_logs)

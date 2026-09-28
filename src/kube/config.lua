@@ -1,20 +1,14 @@
 #!/usr/bin/env lua
 
---[[
-Author: Jakob Beckmann <beckmann_jakob@hotmail.fr>
-Description:
-  Module allowing to interact with the Kubernetes configuration.
-]]--
-
-local yaml = require "lyaml"
-local fun = require "fun"
-local base64 = require "base64"
+local base64 = require("base64")
+local fun = require("fun")
+local yaml = require("lyaml")
 
 local KubeConfig = {}
 
 function KubeConfig.get_default_path()
   local home = os.getenv("HOME")
-  return home.."/.kube/config"
+  return home .. "/.kube/config"
 end
 
 function KubeConfig:new(path)
@@ -28,14 +22,20 @@ function KubeConfig:new(path)
 end
 
 function KubeConfig:context_names()
-  return fun.iter(self.contexts)
-    :map(function(v) return v.name end)
+  return fun
+    .iter(self.contexts)
+    :map(function(v)
+      return v.name
+    end)
     :totable()
 end
 
 function KubeConfig:cluster_names()
-  return fun.iter(self.clusters)
-    :map(function(v) return v.name end)
+  return fun
+    .iter(self.clusters)
+    :map(function(v)
+      return v.name
+    end)
     :totable()
 end
 
@@ -45,7 +45,7 @@ function KubeConfig:cluster_name(ctxt)
       return context.context.cluster
     end
   end
-  return nil, "no cluster found for context: "..ctxt
+  return nil, "no cluster found for context: " .. ctxt
 end
 
 function KubeConfig:cluster(name)
@@ -54,12 +54,15 @@ function KubeConfig:cluster(name)
       return cluster.cluster
     end
   end
-  return nil, "no cluster found with name: "..name
+  return nil, "no cluster found with name: " .. name
 end
 
 function KubeConfig:usernames()
-  return fun.iter(self.users)
-    :map(function(v) return v.name end)
+  return fun
+    .iter(self.users)
+    :map(function(v)
+      return v.name
+    end)
     :totable()
 end
 
@@ -69,7 +72,7 @@ function KubeConfig:username(ctxt)
       return context.context.user
     end
   end
-  return nil, "no username found for context: "..ctxt
+  return nil, "no username found for context: " .. ctxt
 end
 
 function KubeConfig:user(name)
@@ -78,16 +81,12 @@ function KubeConfig:user(name)
       return user.user
     end
   end
-  return nil, "no user found with name: "..name
+  return nil, "no user found with name: " .. name
 end
-
-
-
 
 local conf = {}
 
 conf.Config = {}
-
 
 -- Configuration contructor. Not to be used directly in most cases.
 function conf.Config:new(o)
@@ -173,7 +172,7 @@ end
 function conf.Config:headers()
   if self.token_ then
     return {
-      authorization = "Bearer "..self.token_
+      authorization = "Bearer " .. self.token_,
     }
   end
   return {}
@@ -193,10 +192,10 @@ end
 function conf.from_kube_config(path, ctxt)
   local kube_config = KubeConfig:new(path)
   ctxt = ctxt or kube_config["current-context"]
-  local config = conf.Config:new{
+  local config = conf.Config:new({
     kube_ = kube_config,
     ctxt_ = ctxt,
-  }
+  })
   assert(init_config(config))
   return config
 end
@@ -208,18 +207,18 @@ function conf.in_cluster_config()
   local fh = io.open(sa_path, "r")
   local token = fh:read("a")
   fh:close()
-  return conf.Config:new{
+  return conf.Config:new({
     token_ = token,
-  }
+  })
 end
 
 -- Use a static bearer token to create a configuration to connect to the cluster. This can be either
 -- a static cluster token, or a bootstrap token.
 -- TODO(@jakob): test this function
 function conf.from_token(token)
-  return conf.Config:new{
+  return conf.Config:new({
     token_ = token,
-  }
+  })
 end
 
 return conf

@@ -7,16 +7,77 @@ API, allowing for full control, but provides some convenience functions for quic
 
 ## Getting Started
 
-TODO(@jakob): write this
+Install this checkout with `luarocks make rockspecs/luakube-0.1.0-0.rockspec`,
+then use a kubeconfig containing a bearer token or client certificate:
+
+```lua
+local config = require "kube.config"
+local Client = require "kube.api".Client
+
+local client = Client:new(config.from_kube_config(os.getenv("KUBECONFIG")))
+local pods = client:resource("v1", "Pod")
+local deployments = client:resource("apps/v1", "Deployment")
+
+local all_pods = pods:list({ labelSelector = "app=my-app" })
+local pod = pods:namespace("default"):get("my-app")
+local items = deployments:namespace("default"):list().items
+```
+
+`resource(group_version, kind_or_resource_name)` loads that group's resource
+list once from `/api/v1` or `/apis/GROUP/VERSION`. It resolves a kind, plural
+resource name, singular name, or short name from the server's discovery data.
+This also works for CRDs once their APIs become available. Use
+`client:discover("example.com/v1", true)` to refresh a group after creating a
+CRD or changing available API versions.
 
 ## Documentation
 
-TODO(@jakob): write this
+The generic resource client supports `get(name, query)`, `list(query)`,
+`create(object, query)`, `replace(object, query)` (also `update`),
+`patch(name, patch, query, style)`, `delete(name, query, body)`, and
+`delete_collection(body, query)` where advertised by discovery. Namespace
+scoping is explicit for writes and named reads; listing a namespaced resource
+without `:namespace(...)` lists across namespaces. The resource object's
+`metadata` contains its discovered `name`, `kind`, `namespaced`, `verbs`, and
+`subresources`.
+
+```lua
+local configmaps = client:resource("v1", "ConfigMap"):namespace("default")
+local created, info, code = configmaps:create({
+  metadata = { name = "my-config" }, data = { key = "value" }
+})
+local updated = configmaps:patch("my-config", { data = { key = "other" } })
+local status = configmaps:delete("my-config")
+
+-- Generic subresources use the same name and namespace path construction:
+local logs = pods:namespace("default"):subresource("log")
+  :get_raw("my-app", { tailLines = 50 })
+local pod_status = pods:namespace("default"):subresource("status"):get("my-app")
+```
+
+Create and replace add missing `apiVersion`, `kind`, and (when scoped)
+`metadata.namespace` without changing the supplied table. API responses are
+plain decoded Lua tables. On HTTP errors, methods return `nil, message, code`;
+passing `{ panic = true }` as the second argument to `Client:new` raises
+instead. Patch styles are `merge` (default), `json`, `strategic`, and `apply`;
+server-side apply requires a `fieldManager` query parameter. `get_raw` returns
+the response body as a string for endpoints such as pod logs. For unusual
+subresource actions, use `:subresource("eviction"):request("POST", pod_name, body)`.
+
+Use `client:resource("v1", "Pod")` or `client:resource("batch/v1", "Job")`
+for any discovered resource. The former group-specific clients have been removed.
+
+Current scope: this refactor does not change the existing credential or TLS
+configuration. In particular, the existing transport disables server
+certificate verification. Do not use it for sensitive credentials until that
+configuration is fixed. Watches and WebSocket-based operations remain outside
+the generic CRUD client.
 
 ## Roadmap
 
-The roadmap of the project is documented as [GitHub
-projects](https://github.com/f4z3r/luakube/projects).
+The runtime derives ordinary resource paths and operations from the server's
+discovery API. Remaining work includes TLS verification and credential handling,
+streaming watches, and WebSocket-based exec, attach, and port-forward.
 
 ## Contributing
 
@@ -34,74 +95,16 @@ busted --exclude-tags=system --lua=$(which lua) spec
 
 #### System Tests
 
-The system tests require `k3d` to be installed, and the `docker` service to be running.
-
-To run the system tests:
-
-> Careful, these test take a decent time to complete, as they create several testing clusters.
+For the generic client, `scripts/test-k3s.sh` starts a disposable, agentless
+k3s API with embedded etcd, tests core and grouped resources plus a new CRD,
+and stops the server. It requires `k3s` and `busted` on the path; set
+`K3S_BINARY=/path/to/k3s` if needed. Run it from the repository root:
 
 ```bash
-busted --defer-print --lua=$(which lua) -t system spec
-# or combined with unit tests
-busted --defer-print --lua=$(which lua) spec
+scripts/test-k3s.sh
 ```
 
-> The `--lua` flag is required when running shims with several lua installations other than the
-> system installation.
-
-### Development
-
-This is used to track the progress of the development. It should show the current state of the
-library, including what is supported and what not.
-
-#### Progress
-
-- [x] Accept both strings and tables for objects
-- [ ] Define examples and run them as tests with `#example` tag.
-- [ ] System Tests (covering entire implemented API)
-- [ ] Authentication
-  - [x] Service Account Token
-  - [x] Bootstrap Token
-  - [x] Static Token
-  - [ ] X509 Certificate
-  - [x] Webhook Token
-  - [ ] OIDC
-  - [ ] Proxy
-- [ ] CoreV1
-  - [ ] Pods
-    - [x] Get
-    - [x] Get Status
-    - [x] Update
-    - [x] Update Status
-    - [x] Patch
-    - [x] Create
-    - [x] Delete
-    - [x] Delete Collection
-    - [x] Logs
-    - [x] EphemeralContainers
-    - [ ] Exec
-  - [x] Namespaces
-  - [x] Nodes
-  - [x] Services
-  - [x] PodTemplates
-  - [x] ConfigMap
-  - [x] Secret
-  - [x] ServiceAccounts
-  - [x] Endpoints
-  - [x] PersistentVolumeClaims
-  - [x] PersistentVolumes
-  - [x] ReplicationController
-  - [x] LimitRange
-  - [x] ResourceQuota
-  - [ ] Binding (not meant to be used by end user)
-  - [ ] ComponentStatus (deprecated)
-- [ ] BatchV1
-  - [x] Jobs
-  - [x] CronJobs
-- [ ] AppsV1
-  - [x] Deployments
-  - [x] StatefulSets
-  - [x] DaemonSets
-- [x] NetworkingV1
-  - [x] Ingresses
-  - [x] IngressClasses
+To test an existing **disposable** Kubernetes API instead, set
+`LUAKUBE_TEST_KUBECONFIG` to its kubeconfig and run
+`busted spec/system/discovery_spec.lua`. The test creates a namespace and CRD
+and removes them afterward.
